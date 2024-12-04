@@ -38,11 +38,11 @@ public function addQuestionWithOptions(Request $request)
         $optionText = $optionData['option_text'] ?? null;
         $filePath = null;
         if (isset($optionData['option_image'])) {
-            $imageName = time().'.'.$optionData['option_image']->extension();  
+           // $imageName = time().'.'.$optionData['option_image']->extension();  
           
-            $filePath=  $optionData['option_image']->move(public_path('options'), $imageName);
-            // $storedPath = $optionData['option_image']->store('options', 'public');
-            //$filePath = asset('storage/' . $storedPath);
+            //$filePath=  $optionData['option_image']->move(public_path('options'), $imageName);
+             $storedPath = $optionData['option_image']->store('options', 'public');
+            $filePath = asset('storage/' . $storedPath);
             $optionText = $filePath;
         } else {
             $optionText = $optionData['option_text'];
