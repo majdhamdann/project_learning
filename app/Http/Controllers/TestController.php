@@ -267,5 +267,8 @@ class TestController extends Controller
         'student_answers' => $studentAnswers,
     ]);
     }
+    public function getAllTest(){
+        return  Test::with(['questions.options'])->get();
+    }
 
 }

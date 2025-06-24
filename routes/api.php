@@ -104,5 +104,5 @@ Route::get('/subjects', [SubjectController::class, 'index']);
 
 
 
-
+Route::get('/testsall', [TestController::class, 'getAllTest'])->middleware('auth:sanctum');
 

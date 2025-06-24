@@ -18,13 +18,12 @@ class AuthController extends Controller
             'full-name'=>'required|string',
             'phone'=>'required|unique:users',
             'password'=>'required|min:8',
-            'role_id' => 'required',
         ]);
         $user = User::create([
             'name' => $registerUserData['full-name'],
             'phone' => $registerUserData['phone'],
             'password' => Hash::make($registerUserData['password']),
-            'role_id' => $registerUserData['role_id'],
+            'role_id' => 1,
         ]);
         
         return response()->json([
