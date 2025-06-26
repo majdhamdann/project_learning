@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Report extends Model
 {
-    protected $fillable=['student_id','test_id','correct_answers_count	','incorrect_answers_count'];
+    protected $fillable=['student_id','test_id','correct_answers_count','incorrect_answers_count'];
     protected $table = 'test_reports';
     use HasFactory;
     public function test()

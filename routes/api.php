@@ -8,6 +8,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\UserController;
+use App\Http\controllers\TeacherController;
 use App\Models\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -63,7 +64,7 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
 
 Route::middleware(['auth:sanctum'])->group(function () {
    //للاختبارات الخاصة بالطالب
-Route::get('/tests', [TestController::class, 'createTest']);
+Route::post('/tests', [TestController::class, 'createTest']);
 Route::post('/tests/{testId}/submit', [TestController::class, 'submitAnswers']);
 Route::get('/tests/{testId}/result', [TestController::class, 'getTestResult']);
 
@@ -106,3 +107,14 @@ Route::get('/subjects', [SubjectController::class, 'index']);
 
 Route::get('/testsall', [TestController::class, 'getAllTest'])->middleware('auth:sanctum');
 
+
+//عرض الطلاب الخاصين بالاستاذ 
+Route::get('/teacher_favorite/{id}', [TeacherController::class, 'getFavoriteStudents']);
+//اضافة طالب للاستاذ
+Route::post('/add/favorite/student/{teacher_id}/{student_id}',[TeacherController::class,'addFavoriteStudent']);
+
+Route::get('get/tests/student/{student_id}',[TestController::class,'getTestsByStudent']);
+Route::get('get/tests/teacher/{teacher_id}',[TestController::class,'getTestsByTeacher']);
+Route::get('get/questions/test/{test_id}',[TestController::class,'getTestQuestions']);
+Route::get('get/test/result/{test_id}/{student_id}',[TestController::class,'getTestReport']);
+Route::get('get/full/market/{test_id}',[TestController::class,'getPerfectStudents']);

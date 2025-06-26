@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\Test;
 use App\Models\TestQuestion;
 use App\Models\User;
+use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -182,44 +183,45 @@ class TestController extends Controller
         ]);
     }
     
-     
-    public function submitAnswers(Request $request, $testId)
-    {
-        $validated = $request->validate([
-            'answers' => 'required|array', 
-        ]);
-        
-        $test = Test::with('questions.options')->findOrFail($testId);
-        
-        foreach ($validated['answers'] as $questionId => $selectedOptionId) {
-            $question = $test->questions->find($questionId);
-            
-            if ($question) {
-                $isCorrect = $question->options()->where('id', $selectedOptionId)->value('is_correct');
-    
-                $isCorrect = $isCorrect !== null ? $isCorrect : false;
-                
-                $test->questions()->updateExistingPivot($questionId, [
-                    'selected_option_id' => $selectedOptionId,
-                    'is_correct' => $isCorrect,
-                ]);
-            }
+  public function submitAnswers(Request $request, $testId)
+{
+    $validated = $request->validate([
+        'answers' => 'required|array',
+    ]);
+
+    $test = Test::with('questions.options')->findOrFail($testId);
+
+    foreach ($validated['answers'] as $questionId => $selectedOptionId) {
+        $question = $test->questions->find($questionId);
+
+        if ($question) {
+            $isCorrect = $question->options()->where('id', $selectedOptionId)->value('is_correct');
+            $isCorrect = $isCorrect !== null ? $isCorrect : false;
+
+            $test->questions()->updateExistingPivot($questionId, [
+                'selected_option_id' => $selectedOptionId,
+                'is_correct' => $isCorrect,
+            ]);
         }
-        $correctAnswersCount = $test->questions()->wherePivot('is_correct', true)->count();
-        
-        $incorrectAnswersCount = $test->questions()->wherePivot('is_correct', false)->count();
-        
-        $test->report()->create([
-            'student_id' => $test->student_id,
-            'correct_answers_count' => $correctAnswersCount,
-            'incorrect_answers_count' => $incorrectAnswersCount,
-        ]);
-                return response()->json([
-            'correct_answers_count' => $correctAnswersCount,
-            'incorrect_answers_count' => $incorrectAnswersCount,
-        ]);
     }
-      
+
+    // إعادة تحميل البيانات بعد التحديث
+    $pivotData = $test->questions()->withPivot('is_correct')->get();
+    $correctAnswersCount = $pivotData->where('pivot.is_correct', true)->count();
+    $incorrectAnswersCount = $pivotData->where('pivot.is_correct', false)->count();
+
+    $test->report()->create([
+        'student_id' => $test->student_id,
+        'correct_answers_count' => $correctAnswersCount,
+        'incorrect_answers_count' => $incorrectAnswersCount,
+    ]);
+
+    return response()->json([
+        'correct_answers_count' => $correctAnswersCount,
+        'incorrect_answers_count' => $incorrectAnswersCount,
+    ]);
+}
+
     public function startTest($test_id)
 {
     $test = Test::with('questions.options')->findOrFail($test_id);
@@ -270,5 +272,88 @@ class TestController extends Controller
     public function getAllTest(){
         return  Test::with(['questions.options'])->get();
     }
+
+
+
+//ارجاع الاختبارات التي قام بها طالب معين 
+public function getTestsByStudent($studentId)
+{
+    $tests = Test::with(['lesson', 'subject'])
+        ->where('student_id', $studentId)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json([
+        'student_id' => $studentId,
+        'tests' => $tests
+    ]);
+}
+//الاختبارت لاستاذ معين 
+public function getTestsByTeacher($teacherId)
+{
+    $tests = Test::whereHas('subject', function ($query) use ($teacherId) {
+        $query->where('teacher_id', $teacherId);
+    })
+    ->with(['subject', 'lesson'])
+    ->orderBy('created_at', 'desc')
+    ->get();
+
+    return response()->json([
+        'teacher_id' => $teacherId,
+        'tests' => $tests,
+    ]);
+}
+
+
+
+public function getTestQuestions($testId)
+{
+    $test = Test::with('questions')->find($testId);
+
+    if (!$test) {
+        return response()->json(['message' => 'Test not found'], 404);
+    }
+
+    return response()->json($test->questions);
+}
+
+//نتيجة الاختبار 
+public function getTestReport($testId, $studentId)
+{
+    $report = Report::where('test_id', $testId)
+                        ->where('student_id', $studentId)
+                        ->first();
+
+    if (!$report) {
+        return response()->json([
+            'message' => 'Report not found for this student and test.'
+        ], 404);
+    }
+
+    return response()->json([
+        'correct_answers_count' => $report->correct_answers_count,
+        'incorrect_answers_count' => $report->incorrect_answers_count,
+    ]);
+}
+
+//الطلاب اللي مجاوبين صح 
+public function getPerfectStudents($testId)
+{
+    $reports = Report::where('test_id', $testId)
+                         ->where('incorrect_answers_count', 0)
+                         ->with('student') // نفترض في علاقة student()
+                         ->get();
+
+    return response()->json([
+        'students' => $reports->map(function ($report) {
+            return [
+                'student_id' => $report->student_id,
+                'name' => $report->student->name ?? 'Unknown', // إذا عندك علاقة
+                'correct_answers_count' => $report->correct_answers_count,
+            ];
+        }),
+    ]);
+}
+
 
 }
