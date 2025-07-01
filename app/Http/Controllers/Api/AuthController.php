@@ -9,27 +9,43 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Twilio\Rest\Client;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
-    public function register(Request $request){
-        $registerUserData = $request->validate([
-            'full-name'=>'required|string',
-            'phone'=>'required|unique:users',
-            'password'=>'required|min:8',
-        ]);
-        $user = User::create([
-            'name' => $registerUserData['full-name'],
-            'phone' => $registerUserData['phone'],
-            'password' => Hash::make($registerUserData['password']),
-            'role_id' => 1,
-        ]);
-        
+    public function register(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'name'     => 'required|string|max:255',
+        'phone'    => 'required|unique:users,phone',
+        'email'    => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8',
+    ]);
+
+    if ($validator->fails()) {
         return response()->json([
-            'message' => 'User Created ',
-        ]);
+            'errors' => $validator->errors()
+        ], 422);
     }
+
+    $user = User::create([
+        'name'     => $request->name,
+        'phone'    => $request->phone,
+        'email'    => $request->email,
+        'password' => Hash::make($request->password),
+        'role_id'  => 1,
+    ]);
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'User created successfully',
+        'user'    => $user,
+        'token'   => $token,
+      
+    ], 201);
+}
     public function login(Request $request){
         $loginUserData = $request->validate([
             'phone'=>'required',

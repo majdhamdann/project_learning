@@ -24,10 +24,11 @@ class SubjectController extends Controller
         ], 201);
     }
     public function index()
-   {
-    $subjects = Subject::all(); 
-    return response()->json($subjects);
-   }
+    {
+        $subjects = Subject::with('teacher')->get(); 
+        return response()->json($subjects);
+    }
+    
    public function update(Request $request, $id)
 {
     $validated = $request->validate([

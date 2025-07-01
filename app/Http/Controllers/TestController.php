@@ -278,7 +278,7 @@ class TestController extends Controller
 //ارجاع الاختبارات التي قام بها طالب معين 
 public function getTestsByStudent($studentId)
 {
-    $tests = Test::with(['lesson', 'subject'])
+    $tests = Test::with(['lesson', 'subject', 'questions.options'])
         ->where('student_id', $studentId)
         ->orderBy('created_at', 'desc')
         ->get();
@@ -288,13 +288,18 @@ public function getTestsByStudent($studentId)
         'tests' => $tests
     ]);
 }
+
 //الاختبارت لاستاذ معين 
 public function getTestsByTeacher($teacherId)
 {
     $tests = Test::whereHas('subject', function ($query) use ($teacherId) {
         $query->where('teacher_id', $teacherId);
     })
-    ->with(['subject', 'lesson'])
+    ->with([
+        'subject',
+        'lesson',
+        'questions.options' // ← تحميل الأسئلة مع خياراتها
+    ])
     ->orderBy('created_at', 'desc')
     ->get();
 
@@ -306,9 +311,10 @@ public function getTestsByTeacher($teacherId)
 
 
 
+
 public function getTestQuestions($testId)
 {
-    $test = Test::with('questions')->find($testId);
+    $test = Test::with('questions.options')->find($testId);
 
     if (!$test) {
         return response()->json(['message' => 'Test not found'], 404);
@@ -316,6 +322,7 @@ public function getTestQuestions($testId)
 
     return response()->json($test->questions);
 }
+
 
 //نتيجة الاختبار 
 public function getTestReport($testId, $studentId)
@@ -354,6 +361,21 @@ public function getPerfectStudents($testId)
         }),
     ]);
 }
+
+//الاختبارات لدرس معين 
+public function getTestsByLesson($lessonId)
+{
+    $tests = Test::with('questions.options') // تحميل الأسئلة مع خياراتها
+                 ->where('lesson_id', $lessonId)
+                 ->get();
+
+    return response()->json($tests);
+}
+
+
+
+
+
 
 
 }

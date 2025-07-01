@@ -118,3 +118,4 @@ Route::get('get/tests/teacher/{teacher_id}',[TestController::class,'getTestsByTe
 Route::get('get/questions/test/{test_id}',[TestController::class,'getTestQuestions']);
 Route::get('get/test/result/{test_id}/{student_id}',[TestController::class,'getTestReport']);
 Route::get('get/full/market/{test_id}',[TestController::class,'getPerfectStudents']);
+Route::get('get/tests/lesson/{lesson_id}',[TestController::class,'getTestsByLesson']);
