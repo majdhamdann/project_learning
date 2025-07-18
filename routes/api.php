@@ -158,7 +158,9 @@ Route::get('/get/questions/lesson/{lesson_id}',[QuestionController::class,'getQu
 //عرض الاسئلة مع الاختيارات 
 Route::get('get/questions/options/{lesson_id}',[QuestionController::class,'getQuestionsWithOptionsByLesson']);
 
+//عرض الاساتذة
 
+Route::get('/get/teachers',[TeacherController::class,'getTeachers']);
 
 
 //                                      قسم الادمن 
@@ -188,6 +190,9 @@ Route::post('response/register/{request_id}',[AdminController::class,'updateRequ
 
 //اضافة استاذ
 Route::post('/register/teacher',[AdminController::class,'registerTeacher']);
+
+//عرض المستخدمين 
+Route::get('/get/user',[AdminController::class,'getUser']);
 
 
 

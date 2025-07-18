@@ -8,28 +8,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SubjectController extends Controller
-{public function addSubject(Request $request)
+{
+    
+    public function addSubject(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'phone' => 'required|string',
+            'teacher_id' => 'required|exists:users,id',
         ]);
     
-        // ابحث عن المستخدم بواسطة رقم الهاتف
-        $teacher = User::where('phone', $validated['phone'])->first();
-    
-        // تحقق إن كان موجوداً
-        if (!$teacher) {
-            return response()->json([
-                'message' => 'لا يوجد مستخدم بهذا الرقم.',
-            ], 404);
-        }
+        // ابحث عن المستخدم عبر الـ id
+        $teacher = User::find($validated['teacher_id']);
     
         // تحقق إن كان أستاذ (role_id = 2)
         if ($teacher->role_id != 2) {
             return response()->json([
-                'message' => 'الرقم المدخل لا يعود لأستاذ.',
+                'message' => 'المستخدم المحدد ليس أستاذًا.',
             ], 403);
         }
     
@@ -46,18 +41,12 @@ class SubjectController extends Controller
         ], 201);
     }
     
-    public function index()
-    {
-        $subjects = Subject::with('teacher')->get(); 
-        return response()->json($subjects);
-    }
-    
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'price' => 'sometimes|required|numeric',
-            'phone' => 'sometimes|required|string',
+            'teacher_id' => 'sometimes|required|exists:users,id',
         ]);
     
         $subject = Subject::findOrFail($id);
@@ -72,18 +61,12 @@ class SubjectController extends Controller
             $updateData['price'] = $validated['price'];
         }
     
-        if (array_key_exists('phone', $validated)) {
-            $teacher = User::where('phone', $validated['phone'])->first();
-    
-            if (!$teacher) {
-                return response()->json([
-                    'message' => 'لا يوجد مستخدم بهذا الرقم.',
-                ], 404);
-            }
+        if (array_key_exists('teacher_id', $validated)) {
+            $teacher = User::find($validated['teacher_id']);
     
             if ($teacher->role_id != 2) {
                 return response()->json([
-                    'message' => 'الرقم المدخل لا يعود لأستاذ.',
+                    'message' => 'المستخدم المحدد ليس أستاذًا.',
                 ], 403);
             }
     
@@ -95,7 +78,7 @@ class SubjectController extends Controller
     
         return response()->json([
             'message' => 'تم تحديث المادة بنجاح.',
-            'subject' => $subject->fresh(), // تحديث العرض
+            'subject' => $subject->fresh(),
         ]);
     }
     

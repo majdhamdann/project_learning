@@ -34,8 +34,8 @@ class AuthController extends Controller
             'phone'    => $request->phone,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role_id'  => 1, // مستخدم عادي
-            'status'   => 'pending', // أو "pending" لو تفضل الإنجليزي
+            'role_id'  => 1, 
+            'status'   => 'pending', 
         ]);
     
         return response()->json([

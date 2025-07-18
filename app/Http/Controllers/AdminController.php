@@ -155,4 +155,19 @@ public function registerTeacher(Request $request)
 
 
 
+//عرض الملفات الشخصية 
+
+public function getUser()
+{
+    $students = User::where('role_id', 1)->get();
+    $teachers = User::where('role_id', 2)->get();
+
+    return response()->json([
+        'students' => $students,
+        'teachers' => $teachers,
+    ]);
+}
+
+
+
 }
