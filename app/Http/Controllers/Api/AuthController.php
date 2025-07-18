@@ -34,49 +34,17 @@ class AuthController extends Controller
             'phone'    => $request->phone,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role_id'  => 1, 
-            'status'   => 'accepted', 
+            'role_id'  => 1,
+            'status' =>'accepted',
         ]);
     
+        $token = $user->createToken('auth_token')->plainTextToken;
+    
         return response()->json([
-            'message' => 'تم إرسال طلب التسجيل، بانتظار موافقة الإدارة.',
-            'user_id' => $user->id,
+            'message' => 'User created successfully',
+            'user'    => $user,
+            'token'   => $token,
         ], 201);
-    }
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'phone'    => 'required',
-            'password' => 'required|min:8',
-        ]);
-    
-        $user = User::where('phone', $credentials['phone'])->first();
-    
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            return response()->json([
-                'message' => 'بيانات الدخول غير صحيحة.'
-            ], 401);
-        }
-    
-        if ($user->status === 'pending') {
-            return response()->json([
-                'message' => 'طلبك ما زال قيد المعالجة من قبل الإدارة.'
-            ], 403);
-        }
-    
-        if ($user->status === 'مرفوض') {
-            return response()->json([
-                'message' => 'تم رفض طلب التسجيل من قبل الإدارة.'
-            ], 403);
-        }
-    
-        $token = $user->createToken($user->name . '-AuthToken')->plainTextToken;
-    
-        return response()->json([
-            'message' => 'تم تسجيل الدخول بنجاح.',
-            'access_token' => $token,
-            'user' => $user,
-        ]);
     }
     
     public function logout(Request $request)
