@@ -3,49 +3,103 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SubjectController extends Controller
-{
-    public function addSubject(Request $request)
+{public function addSubject(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'teacher_id' => 'required|exists:users,id', 
+            'phone' => 'required|string',
         ]);
-
-        $subject = Subject::create($validated);
-
+    
+        // ابحث عن المستخدم بواسطة رقم الهاتف
+        $teacher = User::where('phone', $validated['phone'])->first();
+    
+        // تحقق إن كان موجوداً
+        if (!$teacher) {
+            return response()->json([
+                'message' => 'لا يوجد مستخدم بهذا الرقم.',
+            ], 404);
+        }
+    
+        // تحقق إن كان أستاذ (role_id = 2)
+        if ($teacher->role_id != 2) {
+            return response()->json([
+                'message' => 'الرقم المدخل لا يعود لأستاذ.',
+            ], 403);
+        }
+    
+        // إنشاء المادة وربطها بالأستاذ
+        $subject = Subject::create([
+            'title' => $validated['title'],
+            'price' => $validated['price'],
+            'teacher_id' => $teacher->id,
+        ]);
+    
         return response()->json([
-            'message' => 'Subject created successfully',
+            'message' => 'تم إنشاء المادة بنجاح.',
             'subject' => $subject,
         ], 201);
     }
+    
     public function index()
     {
         $subjects = Subject::with('teacher')->get(); 
         return response()->json($subjects);
     }
     
-   public function update(Request $request, $id)
-{
-    $validated = $request->validate([
-        'title' => 'sometimes|required|string|max:255',
-        'price' => 'sometimes|required|numeric',
-        'teacher_id' => 'sometimes|required|exists:teachers,id',
-    ]);
-
-    $subject = Subject::findOrFail($id); 
-
-    $subject->update($validated);
-
-    return response()->json([
-        'message' => 'Subject updated successfully',
-        'subject' => $subject,
-    ]);
-}
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'price' => 'sometimes|required|numeric',
+            'phone' => 'sometimes|required|string',
+        ]);
+    
+        $subject = Subject::findOrFail($id);
+    
+        $updateData = [];
+    
+        if (array_key_exists('title', $validated)) {
+            $updateData['title'] = $validated['title'];
+        }
+    
+        if (array_key_exists('price', $validated)) {
+            $updateData['price'] = $validated['price'];
+        }
+    
+        if (array_key_exists('phone', $validated)) {
+            $teacher = User::where('phone', $validated['phone'])->first();
+    
+            if (!$teacher) {
+                return response()->json([
+                    'message' => 'لا يوجد مستخدم بهذا الرقم.',
+                ], 404);
+            }
+    
+            if ($teacher->role_id != 2) {
+                return response()->json([
+                    'message' => 'الرقم المدخل لا يعود لأستاذ.',
+                ], 403);
+            }
+    
+            $updateData['teacher_id'] = $teacher->id;
+        }
+    
+        // تحديث بيانات المادة
+        $subject->update($updateData);
+    
+        return response()->json([
+            'message' => 'تم تحديث المادة بنجاح.',
+            'subject' => $subject->fresh(), // تحديث العرض
+        ]);
+    }
+    
+    
 public function destroy($id)
 {
     if(Subject::where('id',$id)->exists()){
@@ -111,6 +165,9 @@ public function removeStudentFromSubject(Request $request, $subjectId)
         'message' => 'تم إزالة الطالب من المادة بنجاح.',
     ]);
 }
+
+
+
 
 
     

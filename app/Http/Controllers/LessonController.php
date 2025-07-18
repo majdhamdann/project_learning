@@ -108,19 +108,23 @@ else{
                 'questions' => $lessons 
             ]);
     }
-
-    public function addlesson(Request $request){
+    
+    public function addlesson(Request $request)
+    {
         $validated = $request->validate([
             'title' => 'required', 
-            'subject_id'=>'required|exists:subjects,id'
-          ]);
-          $lesson=Lesson::create($validated);
-          return response()->json([
-            'lesson' => $lesson,
-            'messege'=>'تم اضافة درس بنجاح'
+            'subject_id' => 'required|exists:subjects,id',
+            'video_path' => 'nullable|string|max:500', // رابط الفيديو اختياري
         ]);
-
+    
+        $lesson = Lesson::create($validated);
+    
+        return response()->json([
+            'lesson' => $lesson,
+            'message' => 'تم إضافة الدرس بنجاح'
+        ]);
     }
+    
     public function deleteLesson($id){
       $lesson=Lesson::where('id',$id)->with('questions.options')->delete();
       if($lesson){

@@ -143,4 +143,32 @@ public function updateOption(Request $request, $questionId, $optionId)
 
 
 
+public function getQuestionsByLesson($lesson_id)
+{
+    // استرجاع كل الأسئلة المرتبطة بالدرس المعين
+    $questions = Question::where('lesson_id', $lesson_id)->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'لا توجد أسئلة لهذا الدرس.'], 404);
+    }
+
+    return response()->json($questions);
+}
+
+
+public function getQuestionsWithOptionsByLesson($lesson_id)
+{
+    // استرجاع الأسئلة المرتبطة بالدرس مع الاختيارات لكل سؤال
+    $questions = Question::with('options')
+        ->where('lesson_id', $lesson_id)
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'لا توجد أسئلة لهذا الدرس.'], 404);
+    }
+
+    return response()->json($questions);
+}
+
+
 }

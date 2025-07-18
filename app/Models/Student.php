@@ -21,6 +21,9 @@ class Student extends User
         return $this->belongsToMany(Teacher::class, 'teacher_favorite', 'student_id', 'teacher_id');
     }
 
-
+    public function Subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subjects::class, 'subject_student', 'subject_id', 'student_id')->withPivot('status')->withTimestamps();
+    }
 
 }

@@ -15,11 +15,11 @@ class Subject extends Model
     {
         return $this->hasMany(Lesson::class);
     }
-    public function students(): BelongsToMany
+ /*   public function students(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'subject_student', 'subject_id', 'student_id');
-    }
-    
+        return $this->belongsToMany(User::class, 'subject_student', 'subject_id', 'student_id')->withPivot('status')->withTimestamps();
+     }
+    */
     public function tests()
     {
         return $this->hasMany(Test::class);

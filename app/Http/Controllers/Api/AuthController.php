@@ -15,53 +15,70 @@ use Illuminate\Support\Facades\Storage;
 class AuthController extends Controller
 {
     public function register(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'name'     => 'required|string|max:255',
-        'phone'    => 'required|unique:users,phone',
-        'email'    => 'required|email|unique:users,email',
-        'password' => 'required|string|min:8',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    $user = User::create([
-        'name'     => $request->name,
-        'phone'    => $request->phone,
-        'email'    => $request->email,
-        'password' => Hash::make($request->password),
-        'role_id'  => 1,
-    ]);
-
-    $token = $user->createToken('auth_token')->plainTextToken;
-
-    return response()->json([
-        'message' => 'User created successfully',
-        'user'    => $user,
-        'token'   => $token,
-      
-    ], 201);
-}
-    public function login(Request $request){
-        $loginUserData = $request->validate([
-            'phone'=>'required',
-            'password'=>'required|min:8'
+    {
+        $validator = Validator::make($request->all(), [
+            'name'     => 'required|string|max:255',
+            'phone'    => 'required|unique:users,phone',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
         ]);
-        $user = User::where('phone',$loginUserData['phone'])->first();
-        if(!$user || !Hash::check($loginUserData['password'],$user->password)){
+    
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Invalid Credentials'
-            ],401);
+                'errors' => $validator->errors()
+            ], 422);
         }
-        $token = $user->createToken($user->name.'-AuthToken')->plainTextToken;
+    
+        $user = User::create([
+            'name'     => $request->name,
+            'phone'    => $request->phone,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role_id'  => 1, // مستخدم عادي
+            'status'   => 'pending', // أو "pending" لو تفضل الإنجليزي
+        ]);
+    
         return response()->json([
+            'message' => 'تم إرسال طلب التسجيل، بانتظار موافقة الإدارة.',
+            'user_id' => $user->id,
+        ], 201);
+    }
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'phone'    => 'required',
+            'password' => 'required|min:8',
+        ]);
+    
+        $user = User::where('phone', $credentials['phone'])->first();
+    
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'message' => 'بيانات الدخول غير صحيحة.'
+            ], 401);
+        }
+    
+        if ($user->status === 'pending') {
+            return response()->json([
+                'message' => 'طلبك ما زال قيد المعالجة من قبل الإدارة.'
+            ], 403);
+        }
+    
+        if ($user->status === 'مرفوض') {
+            return response()->json([
+                'message' => 'تم رفض طلب التسجيل من قبل الإدارة.'
+            ], 403);
+        }
+    
+        $token = $user->createToken($user->name . '-AuthToken')->plainTextToken;
+    
+        return response()->json([
+            'message' => 'تم تسجيل الدخول بنجاح.',
             'access_token' => $token,
+            'user' => $user,
         ]);
     }
+    
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();

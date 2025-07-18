@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('subject_student', function (Blueprint $table) {
             $table->id();
             $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-            $table->foreignId('student_id')->constrained('users')->onDelete('cascade');
-            $table->boolean('access')->default(false);
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->enum('status',['accepted','pending','rejected'])->default('pending');
             $table->timestamps();
         });
     }
