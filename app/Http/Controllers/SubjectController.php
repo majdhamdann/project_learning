@@ -150,6 +150,15 @@ public function removeStudentFromSubject(Request $request, $subjectId)
 }
 
 
+public function getSubjects()
+{
+    // استرجاع جميع المواد مع المعلومات المرتبطة بالأستاذ
+    $subjects = Subject::with('teacher')->get();
+
+    return response()->json([
+        'subjects' => $subjects,
+    ]);
+}
 
 
 

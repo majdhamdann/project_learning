@@ -46,8 +46,6 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
      Route::put('/users/{id}', [UserController::class, 'update']); 
      Route::delete('/users/{id}', [UserController::class, 'delete']); 
    
-     // ادارة المواد
-     Route::get('/subjects', [SubjectController::class, 'index']);
 
     // Route::middleware(['auth:sanctum', 'can:isAdmin'])->post('add/subjects', [SubjectController::class, 'addSubject']);
 
@@ -105,7 +103,7 @@ Route::get('/subjects/{id}/show', [SubjectController::class, 'show'])->middlewar
 //عرض الدروس
 Route::get('/viewlesson/{subjectId}', [LessonController::class, 'getLessons']);
 
-Route::get('/subjects', [SubjectController::class, 'index']);
+Route::get('get/subjects', [SubjectController::class, 'getSubjects']);
 
 
 
