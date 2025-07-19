@@ -47,6 +47,40 @@ class AuthController extends Controller
         ], 201);
     }
     
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'phone' => 'required|string',
+            'password' => 'required|string',
+        ]);
+    
+        $user = User::where('phone', $credentials['phone'])->first();
+    
+        if (!$user) {
+            return response()->json([
+                'message' => 'رقم الهاتف غير مسجل.',
+            ], 404);
+        }
+    
+       
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'message' => 'كلمة المرور غير صحيحة.',
+            ], 401);
+        }
+    
+      
+        $token = $user->createToken('auth_token')->plainTextToken;
+    
+        return response()->json([
+            'message' => 'تم تسجيل الدخول بنجاح.',
+            'user' => $user,
+            'token' => $token,
+        ]);
+    }
+
+
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
