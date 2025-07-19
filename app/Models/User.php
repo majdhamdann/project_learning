@@ -20,7 +20,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'phone', 'password', 'role_id','profile_image','email','status'
+        'name', 'phone', 'password', 'role_id','profile_image','email'
     ];
 
 
@@ -74,6 +74,13 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-   
+ 
+public function subjectRequests()
+{
+    return $this->belongsToMany(Subject::class, 'teacher_subject')
+                ->withPivot('status')
+                ->withTimestamps();
+}
+
 
 }

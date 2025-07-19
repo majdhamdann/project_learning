@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Lesson extends Model
 {
     use HasFactory;
-    protected $fillable = ['subject_id', 'title','video_path'];
+    protected $fillable = ['subject_id', 'title','video_path','summary_path'];
     public function subject()
     {
         return $this->belongsTo(Subject::class);

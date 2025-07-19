@@ -6,6 +6,7 @@ use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use App\Models\TeacherSubject;
 
 class LessonController extends Controller
 {
@@ -114,9 +115,25 @@ else{
         $validated = $request->validate([
             'title' => 'required', 
             'subject_id' => 'required|exists:subjects,id',
-            'video_path' => 'nullable|string|max:500', // رابط الفيديو اختياري
+            'video_path' => 'nullable|string|max:500',
+            'summary_path' => 'nullable|string|max:500',
+
         ]);
     
+        $teacherId = auth()->id(); // جلب معرف الأستاذ الحالي
+    
+        // تحقق من حالة teacher_subject
+        $teacherSubject = TeacherSubject::where('teacher_id', $teacherId)
+            ->where('subject_id', $validated['subject_id'])
+            ->first();
+    
+        if (!$teacherSubject || $teacherSubject->status !== 'accepted') {
+            return response()->json([
+                'error' => 'غير مسموح لك بإضافة الدرس لأنك لست استاذ لهذه المادة'
+            ], 403);
+        }
+    
+        // إذا الحالة مقبولة، أنشئ الدرس
         $lesson = Lesson::create($validated);
     
         return response()->json([

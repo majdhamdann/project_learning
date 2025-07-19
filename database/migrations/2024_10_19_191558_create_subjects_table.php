@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->decimal('price', 8, 2)->nullable();
-            $table->unsignedBigInteger('teacher_id')->nullable(); 
-            $table->foreign('teacher_id')->references('id')->on('Users')->onDelete('set null');
+           // $table->unsignedBigInteger('teacher_id')->nullable(); 
+           // $table->foreign('teacher_id')->references('id')->on('Users')->onDelete('set null');
             $table->timestamps();
         });
     }

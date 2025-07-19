@@ -47,7 +47,11 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
      Route::delete('/users/{id}', [UserController::class, 'delete']); 
    
 
-    // Route::middleware(['auth:sanctum', 'can:isAdmin'])->post('add/subjects', [SubjectController::class, 'addSubject']);
+
+//طلب الانضمام لمادة 
+
+Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
+
 
 
         //اضافة طلاب للمادة
@@ -56,8 +60,12 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
      Route::post('subjects/{subjectId}/remove-student', [SubjectController::class, 'removeStudentFromSubject']);
 
       // ادارة الدروس
-      Route::post('lesson', [LessonController::class, 'addlesson']);
-      Route::delete('lesson/{id}', [LessonController::class, 'deleteLesson']);
+
+      //اضافة درس 
+      Route::post('/add/lesson', [LessonController::class, 'addlesson']);
+
+      //حذف درس
+      Route::delete('/delete/lesson/{id}', [LessonController::class, 'deleteLesson']);
 
       Route::post('/import_excel', [ImportController::class, 'import']);
 
@@ -192,6 +200,10 @@ Route::post('/register/teacher',[AdminController::class,'registerTeacher']);
 //عرض المستخدمين 
 Route::get('/get/user',[AdminController::class,'getUser']);
 
+//عرض طلبات الاساتذة للانضمام لمادة 
+Route::get('/get/request/join/subject',[AdminController::class,'getPendingTeacherSubjectRequests']);
 
+//قبول ورفض طلبات الاساتذة 
+Route::post('/response/teacher/join/subject/{request_id}',[AdminController::class,'handleTeacherSubjectRequest']);
 
        });

@@ -7,10 +7,13 @@ use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\SubjectStudent;
+use App\Models\TeacherSubject;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+
 
 
 
@@ -170,4 +173,45 @@ public function getUser()
 
 
 
+//عرض طلبات الاساتذة للانضمام لمادة 
+
+public function getPendingTeacherSubjectRequests()
+{
+    $requests = TeacherSubject::with(['teacher', 'subject'])
+        ->where('status', 'pending')
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'pending_requests' => $requests
+    ]);
+}
+
+
+//قبول ورفض طلبات الاساتذة 
+
+
+
+public function handleTeacherSubjectRequest(Request $request,$id)
+{
+    $validated = $request->validate([
+        'status' => 'required|in:accept,reject',
+    ]);
+
+    $requestRow = TeacherSubject::findOrFail($id);
+
+    // تحويل القيمة
+    $statusMap = [
+        'accept' => 'accepted',
+        'reject' => 'rejected',
+    ];
+
+    $requestRow->status = $statusMap[$validated['status']];
+    $requestRow->save();
+
+    return response()->json([
+        'message' => 'تم تحديث حالة طلب الاشتراك بنجاح.',
+        'request' => $requestRow->load(['teacher', 'subject']),
+    ]);
+}
 }

@@ -33,4 +33,14 @@ class Subject extends Model
 {
     return $this->belongsTo(Teacher::class, 'teacher_id');
 }
+/*
+public function requestedTeachers()
+{
+    return $this->belongsToMany(Teacher::class, 'teacher_subject')
+                ->withPivot('status')
+                ->withTimestamps();
+}
+*/
+
+
 }

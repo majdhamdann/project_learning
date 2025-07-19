@@ -15,28 +15,16 @@ class SubjectController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'teacher_id' => 'required|exists:users,id',
         ]);
     
-        // ابحث عن المستخدم عبر الـ id
-        $teacher = User::find($validated['teacher_id']);
-    
-        // تحقق إن كان أستاذ (role_id = 2)
-        if ($teacher->role_id != 2) {
-            return response()->json([
-                'message' => 'المستخدم المحدد ليس أستاذًا.',
-            ], 403);
-        }
-    
-        // إنشاء المادة وربطها بالأستاذ
         $subject = Subject::create([
             'title' => $validated['title'],
             'price' => $validated['price'],
-            'teacher_id' => $teacher->id,
+           
         ]);
     
         return response()->json([
-            'message' => 'تم إنشاء المادة بنجاح.',
+            'message' => 'تم إنشاء المادة بنجاح ',
             'subject' => $subject,
         ], 201);
     }
