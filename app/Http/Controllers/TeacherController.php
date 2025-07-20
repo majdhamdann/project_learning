@@ -23,6 +23,9 @@ class TeacherController extends Controller
 }
 
 
+
+// عرض المفضلة لاستاذ
+
 public function getMyFavoriteStudents()
 {
     $teacherId = auth()->id();
@@ -38,6 +41,10 @@ public function getMyFavoriteStudents()
     ]);
 }
 
+
+
+//اضافة طالب للمفضلة 
+
 public function addFavoriteStudent($studentId)
 {
     $user = auth()->user();
@@ -50,13 +57,13 @@ public function addFavoriteStudent($studentId)
         return response()->json(['error' => 'غير مسموح، فقط الأساتذة يمكنهم إضافة طلاب للمفضلة'], 403);
     }
 
-    // تحقق أن الطالب موجود و role_id = 1
+    
     $student = User::where('id', $studentId)->where('role_id', 1)->first();
     if (!$student) {
         return response()->json(['error' => 'الطالب غير موجود أو ليس طالباً '], 404);
     }
 
-    // تحقق إذا الطالب موجود بالفعل في المفضلة
+   
     $exists = DB::table('teacher_favorite')
         ->where('teacher_id', $user->id)
         ->where('student_id', $studentId)
@@ -66,7 +73,7 @@ public function addFavoriteStudent($studentId)
         return response()->json(['message' => 'الطالب مضاف مسبقاً في المفضلة']);
     }
 
-    // أضف الطالب إلى المفضلة
+   
     DB::table('teacher_favorite')->insert([
         'teacher_id' => $user->id,
         'student_id' => $studentId,
@@ -75,6 +82,34 @@ public function addFavoriteStudent($studentId)
     ]);
 
     return response()->json(['message' => 'تمت إضافة الطالب إلى المفضلة بنجاح']);
+}
+   
+
+//حذف طالب من المفضلة 
+
+public function removeFavoriteStudent($studentId)
+{
+    $user = auth()->user();
+
+    if (!$user) {
+        return response()->json(['error' => 'يجب تسجيل الدخول أولاً'], 401);
+    }
+
+    if ($user->role_id != 2) {
+        return response()->json(['error' => 'غير مسموح، فقط الأساتذة يمكنهم إدارة المفضلة'], 403);
+    }
+
+    // تنفيذ الحذف من جدول teacher_favorite
+    $deleted = DB::table('teacher_favorite')
+        ->where('teacher_id', $user->id)
+        ->where('student_id', $studentId)
+        ->delete();
+
+    if ($deleted) {
+        return response()->json(['message' => 'تم حذف الطالب من المفضلة بنجاح']);
+    } else {
+        return response()->json(['message' => 'الطالب غير موجود في المفضلة'], 404);
+    }
 }
 
 

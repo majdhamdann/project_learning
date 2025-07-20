@@ -91,6 +91,8 @@ Route::get('/test/{test}', function (Test $test) {
 Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
   //اضافة,حذف سؤال
   Route::post('/add-question', [QuestionController::class, 'addQuestionWithOptions']);
+
+  //حذف سؤال
   Route::delete('/delet-question/{id}', [QuestionController::class, 'deleteQuestion']);
 
 //انشاء رابط للاختبار
@@ -103,8 +105,12 @@ Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
 
 //عرض الطلاب الخاصين بالاستاذ 
 Route::get('/teacher_favorite', [TeacherController::class, 'getMyFavoriteStudents']);
+
 //اضافة طالب للاستاذ
 Route::post('/add/favorite/student/{student_id}',[TeacherController::class,'addFavoriteStudent']);
+
+//حذف طالب من المفضلة 
+Route::delete('/delete/favorite/student/{student_id}',[TeacherController::class,'removeFavoriteStudent']);
 
  });
 
