@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\TeacherSubject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -137,14 +138,35 @@ public function removeStudentFromSubject(Request $request, $subjectId)
     ]);
 }
 
+//عرض جميع المواد
+
 
 public function getSubjects()
 {
     // استرجاع جميع المواد مع المعلومات المرتبطة بالأستاذ
-    $subjects = Subject::with('teacher')->get();
+    $subjects = Subject::all();
 
     return response()->json([
         'subjects' => $subjects,
+    ]);
+}
+
+
+//عرض  الاساتذة لمادة 
+
+public function getTeachersBySubject($subjectId)
+{
+    
+    $teacherSubjects = TeacherSubject::with('teacher')
+        ->where('subject_id', $subjectId)
+        ->where('status', 'accepted')
+        ->get();
+
+   
+    $teachers = $teacherSubjects->pluck('teacher')->filter();
+
+    return response()->json([
+        'teachers' => $teachers
     ]);
 }
 

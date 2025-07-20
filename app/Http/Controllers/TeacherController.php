@@ -21,29 +21,62 @@ class TeacherController extends Controller
 
     return response()->json($teachers);
 }
-public function getFavoriteStudents($teacherId)
+
+
+public function getMyFavoriteStudents()
 {
-    $teacher = Teacher::where('id', $teacherId)->firstOrFail();
+    $teacherId = auth()->id();
 
-    $favoriteStudents = $teacher->favoriteStudents;
+    $studentIds = DB::table('teacher_favorite')
+        ->where('teacher_id', $teacherId)
+        ->pluck('student_id');
 
-    return response()->json($favoriteStudents);
+    $students = User::whereIn('id', $studentIds)->where('role_id', 1)->get();
+
+    return response()->json([
+        'students' => $students
+    ]);
 }
 
-
-public function addFavoriteStudent($teacher_id, $student_id)
+public function addFavoriteStudent($studentId)
 {
-    $teacher = Teacher::findOrFail($teacher_id);
-    $student = Student::findOrFail($student_id);
+    $user = auth()->user();
 
-  
-    if (!$teacher->favoriteStudents()->where('student_id', $student_id)->exists()) {
-        $teacher->favoriteStudents()->attach($student_id);
-        return response()->json(['message' => 'تم إضافة الطالب إلى المفضلة'], 200);
+    if (!$user) {
+        return response()->json(['error' => 'يجب تسجيل الدخول أولاً'], 401);
     }
 
-    return response()->json(['message' => 'الطالب موجود مسبقاً'], 409);
+    if ($user->role_id != 2) {
+        return response()->json(['error' => 'غير مسموح، فقط الأساتذة يمكنهم إضافة طلاب للمفضلة'], 403);
+    }
+
+    // تحقق أن الطالب موجود و role_id = 1
+    $student = User::where('id', $studentId)->where('role_id', 1)->first();
+    if (!$student) {
+        return response()->json(['error' => 'الطالب غير موجود أو ليس طالباً '], 404);
+    }
+
+    // تحقق إذا الطالب موجود بالفعل في المفضلة
+    $exists = DB::table('teacher_favorite')
+        ->where('teacher_id', $user->id)
+        ->where('student_id', $studentId)
+        ->exists();
+
+    if ($exists) {
+        return response()->json(['message' => 'الطالب مضاف مسبقاً في المفضلة']);
+    }
+
+    // أضف الطالب إلى المفضلة
+    DB::table('teacher_favorite')->insert([
+        'teacher_id' => $user->id,
+        'student_id' => $studentId,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json(['message' => 'تمت إضافة الطالب إلى المفضلة بنجاح']);
 }
+
 
 
 

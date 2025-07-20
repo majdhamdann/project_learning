@@ -83,4 +83,10 @@ public function subjectRequests()
 }
 
 
+public function teacher()
+{
+    return $this->hasOne(Teacher::class, 'user_id'); // تأكد من استخدام 'user_id'
+}
+
+
 }

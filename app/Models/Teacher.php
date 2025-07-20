@@ -21,6 +21,12 @@ class Teacher extends User
         return $this->belongsToMany(Student::class, 'teacher_favorite', 'teacher_id', 'student_id');
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    
+
 /*
     public function subjectRequests()
     {

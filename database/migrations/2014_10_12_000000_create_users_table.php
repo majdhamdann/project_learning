@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('email')->unique()->nullable();
             $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
             $table->string('password');
-            $table->enum('status',['accepted','pending','rejected'])->default('pending');
             $table->rememberToken();
             $table->timestamps();
         });

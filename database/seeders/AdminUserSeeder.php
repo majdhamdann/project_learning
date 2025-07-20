@@ -16,9 +16,9 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Administrator',
                 'phone' =>'0996644362',
                 'email' => 'admin@example.com',
-                'password' => Hash::make('12345678'), // استبدل بكلمة مرور آمنة
-                'role_id' => '3', // إذا كان لديك حقل role في جدول users
-                'status' => 'accepted'          
+                'password' => Hash::make('12345678'), 
+                'role_id' => '3', 
+                          
            
                 ]
         );

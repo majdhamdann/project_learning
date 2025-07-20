@@ -101,7 +101,10 @@ Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
 //تصدير الملف كword
   Route::POST('/tests/export', [TestController::class, 'exportTestQuestionsToWord']);
 
-
+//عرض الطلاب الخاصين بالاستاذ 
+Route::get('/teacher_favorite', [TeacherController::class, 'getMyFavoriteStudents']);
+//اضافة طالب للاستاذ
+Route::post('/add/favorite/student/{student_id}',[TeacherController::class,'addFavoriteStudent']);
 
  });
 
@@ -111,18 +114,17 @@ Route::get('/lessons/viewallQuestion/{subjectId}', [LessonController::class, 'vi
 Route::get('/subjects/{id}/show', [SubjectController::class, 'show'])->middleware('auth:sanctum');
 //عرض الدروس
 Route::get('/viewlesson/{subjectId}', [LessonController::class, 'getLessons']);
-
+//عرض المواد
 Route::get('get/subjects', [SubjectController::class, 'getSubjects']);
 
+//عرض الاساتذة لمادة 
+Route::get('/get/teachers/subject/{subject_id}',[SubjectController::class,'getTeachersBySubject']);
 
 
 Route::get('/testsall', [TestController::class, 'getAllTest'])->middleware('auth:sanctum');
 
 
-//عرض الطلاب الخاصين بالاستاذ 
-Route::get('/teacher_favorite/{id}', [TeacherController::class, 'getFavoriteStudents']);
-//اضافة طالب للاستاذ
-Route::post('/add/favorite/student/{teacher_id}/{student_id}',[TeacherController::class,'addFavoriteStudent']);
+
 //عرض اختبارت طالب
 Route::get('get/tests/student/{student_id}',[TestController::class,'getTestsByStudent']);
 //عرض اختبارات استاذ
@@ -144,19 +146,6 @@ Route::get('get/tests/lesson/{lesson_id}',[TestController::class,'getTestsByLess
 Route::middleware(['auth:sanctum'])->post('/student/request-subject', [StudentController::class, 'requestSubject']);
 
 
-/*
-Route::middleware(['auth:sanctum', 'can:isAdmin'])->group(function () {
-  // الآن يتأكد إنه مسجل دخول AND إنه أدمن
- //عرض الطلبات للاشتراك بمادة
-  Route::get('/admin/subject-requests', [AdminController::class, 'listSubjectRequests']);
-
-//تغيير حالة طلب الاشترك بمادة 
-  Route::post('/admin/subject-requests/{request_id}', [AdminController::class, 'handleSubjectRequest']);
-
-//Route::post('add/subjects', [SubjectController::class, 'addSubject']);
-
-});
-*/
 // عرض دروس مادة 
 Route::middleware('auth:sanctum')->get('/get/lessons/subject/{subject_id}',[StudentController::class,'getLessonsBySubject']);
 
