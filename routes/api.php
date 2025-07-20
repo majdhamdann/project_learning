@@ -52,7 +52,8 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
 
 Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
 
-
+//عرض حالة الطلب للانضمام لمادة 
+Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherRequests']);
 
         //اضافة طلاب للمادة
      Route::post('/subjects/{subject}/students', [SubjectController::class, 'addStudentsToSubject']);
