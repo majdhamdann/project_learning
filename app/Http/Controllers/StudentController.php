@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Subject;
 use App\Models\Student;
+use App\Models\User;
 use App\Models\SubjectRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -118,7 +119,19 @@ public function getLessonsBySubject($subject_id)
             return response()->json(['message' => 'حالة غير معروفة.'], 400);
     }
 }
+   
 
+
+//عرض الطلاب 
+
+
+public function getStudents()
+{
+    
+    $students = User::where('role_id', 1)->get();
+
+    return response()->json($students);
+}
 
 
 }

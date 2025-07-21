@@ -109,6 +109,10 @@ Route::get('/teacher_favorite', [TeacherController::class, 'getMyFavoriteStudent
 //اضافة طالب للاستاذ
 Route::post('/add/favorite/student/{student_id}',[TeacherController::class,'addFavoriteStudent']);
 
+// اضافة مجموعة طلاب للمفضلة 
+
+Route::post('/add/favorite/students',[TeacherController::class,'addFavoriteStudents']);
+
 //حذف طالب من المفضلة 
 Route::delete('/delete/favorite/student/{student_id}',[TeacherController::class,'removeFavoriteStudent']);
 
@@ -144,7 +148,7 @@ Route::get('get/full/market/{test_id}',[TestController::class,'getPerfectStudent
 //عرض اختبار درس معين 
 Route::get('get/tests/lesson/{lesson_id}',[TestController::class,'getTestsByLesson']);
 
-
+//
 
 
 
@@ -163,6 +167,9 @@ Route::get('get/questions/options/{lesson_id}',[QuestionController::class,'getQu
 //عرض الاساتذة
 
 Route::get('/get/teachers',[TeacherController::class,'getTeachers']);
+
+//عرض الطلاب 
+Route::get('/get/students',[StudentController::class,'getStudents']);
 
 
 //                                      قسم الادمن 
