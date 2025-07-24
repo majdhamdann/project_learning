@@ -34,10 +34,11 @@ class Test extends Model
         return $this->hasOne(Report::class);
     }
 
-    public function lesson()
-{
-    return $this->belongsTo(Lesson::class);
-}
+    public function lessons()
+    {
+        return $this->belongsToMany(Lesson::class);
+    }
+    
 
 public function subject()
 {

@@ -117,28 +117,34 @@ else{
             'subject_id' => 'required|exists:subjects,id',
             'video_path' => 'nullable|string|max:500',
             'summary_path' => 'nullable|string|max:500',
-
         ]);
     
-        $teacherId = auth()->id(); // جلب معرف الأستاذ الحالي
+        $teacherId = auth()->id(); 
     
-        // تحقق من حالة teacher_subject
+        
         $teacherSubject = TeacherSubject::where('teacher_id', $teacherId)
             ->where('subject_id', $validated['subject_id'])
+            ->where('status', 'accepted')
             ->first();
     
-        if (!$teacherSubject || $teacherSubject->status !== 'accepted') {
+        if (!$teacherSubject) {
             return response()->json([
-                'error' => 'غير مسموح لك بإضافة الدرس لأنك لست استاذ لهذه المادة'
+                'error' => 'You are not authorized to add lessons to this subject.'
             ], 403);
         }
     
-        // إذا الحالة مقبولة، أنشئ الدرس
-        $lesson = Lesson::create($validated);
+       
+        $lesson = Lesson::create([
+            'title' => $validated['title'],
+            'subject_id' => $validated['subject_id'],
+            'video_path' => $validated['video_path'] ?? null,
+            'summary_path' => $validated['summary_path'] ?? null,
+            'teacher_id' => $teacherId, 
+        ]);
     
         return response()->json([
             'lesson' => $lesson,
-            'message' => 'تم إضافة الدرس بنجاح'
+            'message' => 'Lesson added successfully.'
         ]);
     }
     
@@ -157,6 +163,31 @@ else{
     }
 
     
+
+    public function getLessonsForTeacherSubject(Request $request,$teacherId)
+    {
+       
+    
+        $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+        ]);
+    
+        $lessons = Lesson::where('teacher_id', $teacherId)
+            ->where('subject_id', $request->subject_id)
+            ->get();
+    
+        if ($lessons->isEmpty()) {
+            return response()->json([
+                'message' => 'No lessons found for this subject by the current teacher.'
+            ], 404);
+        }
+    
+        return response()->json([
+            'lessons' => $lessons
+        ]);
+    }
+    
+
    
 
 }

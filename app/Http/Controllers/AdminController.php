@@ -21,29 +21,55 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
 {
+
+    // عرض طلبات الطلاب 
+
     public function listSubjectRequests()
-{
-    $requests = SubjectStudent::with('user', 'subject')->where('status', 'pending')->get();
-    return response()->json($requests);
-}
+    {
+        $teacher = auth()->user();
+    
+        if (!$teacher) {
+            return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
+        }
+    
+        $requests = SubjectStudent::with(['user', 'subject'])
+            ->where('status', 'pending')
+            ->where('teacher_id', $teacher->id)
+            ->get();
+    
+        return response()->json($requests);
+    }
+    
 
 
+//قبول ورفض طلبات الاشتراك بمادة
 
 public function handleSubjectRequest(Request $request, $id)
 {
-    $SubjectStudent = SubjectStudent::findOrFail($id);
+    $teacher = auth()->user();
 
-    if ($request->status == 'accept') {
-        $SubjectStudent->status = 'accepted'; 
-    } elseif ($request->status == 'reject') {
-        $SubjectStudent->status = 'rejected';
-    } else {
-        return response()->json(['message' => 'الإجراء غير صالح.'], 400);
+    if (!$teacher) {
+        return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
     }
 
-    $SubjectStudent->save();
+    $subjectStudent = SubjectStudent::findOrFail($id);
 
-    return response()->json(['message' => 'تم تحديث حالة الطلب.']);
+    // التحقق إذا كان هذا الطلب يخص الأستاذ المسجل دخوله
+    if ($subjectStudent->teacher_id !== $teacher->id) {
+        return response()->json(['message' => 'You are not authorized to manage this request.'], 403);
+    }
+
+    if ($request->status === 'accept') {
+        $subjectStudent->status = 'accepted';
+    } elseif ($request->status === 'reject') {
+        $subjectStudent->status = 'rejected';
+    } else {
+        return response()->json(['message' => 'Invalid action.'], 400);
+    }
+
+    $subjectStudent->save();
+
+    return response()->json(['message' => 'Request status updated successfully.']);
 }
 
 

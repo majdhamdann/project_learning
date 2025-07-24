@@ -11,7 +11,7 @@ class SubjectStudent extends Model
 
     protected $table = 'subject_student';
 
-    protected $fillable = ['user_id', 'subject_id', 'status'];
+    protected $fillable = ['user_id', 'subject_id', 'status','teacher_id'];
 
     public function user() {
         return $this->belongsTo(User::class);

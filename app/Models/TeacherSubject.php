@@ -16,6 +16,8 @@ class TeacherSubject extends Model
         'teacher_id',
         'subject_id',
         'status',
+        'teaching_start_date',
+        'teacher_image'
     ];
 
     public function teacher()

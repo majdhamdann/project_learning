@@ -54,37 +54,42 @@ public function subscribe(Request $request)
         'message' => 'تم إرسال طلب الاشتراك بنجاح.',
     ], 200);
 }
-    
+
+
 public function requestSubject(Request $request)
 {
     $user = auth()->user();
 
     if (!$user) {
-        return response()->json(['message' => 'غير مصرح. يرجى تسجيل الدخول أولاً.'], 401);
+        return response()->json(['message' => 'Unauthorized. Please log in first.'], 401);
     }
 
     $request->validate([
         'subject_id' => 'required|exists:subjects,id',
+        'teacher_id' => 'required|exists:users,id', // تأكد من وجود الجدول أو غيره حسب النظام عندك
     ]);
 
-    // منع التكرار
+    // Check for existing pending request
     $existing = SubjectStudent::where('user_id', $user->id)
         ->where('subject_id', $request->subject_id)
+        ->where('teacher_id', $request->teacher_id)
         ->where('status', 'pending')
         ->first();
 
     if ($existing) {
-        return response()->json(['message' => 'لقد قدمت طلب مسبقاً لهذه المادة.'], 400);
+        return response()->json(['message' => 'You have already submitted a request for this subject with this teacher.'], 400);
     }
 
     SubjectStudent::create([
         'user_id' => $user->id,
         'subject_id' => $request->subject_id,
+        'teacher_id' => $request->teacher_id,
         'status' => 'pending',
     ]);
 
-    return response()->json(['message' => 'تم إرسال الطلب بنجاح، بانتظار الموافقة.']);
+    return response()->json(['message' => 'Request submitted successfully and is pending approval.']);
 }
+
 
 //عرض دروس مادة 
 

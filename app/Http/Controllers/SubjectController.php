@@ -153,22 +153,26 @@ public function getSubjects()
 
 
 //عرض  الاساتذة لمادة 
-
-public function getTeachersBySubject($subjectId)
+public function getTeachersForSubject($subjectId)
 {
-    
-    $teacherSubjects = TeacherSubject::with('teacher')
-        ->where('subject_id', $subjectId)
-        ->where('status', 'accepted')
-        ->get();
+    $subject = Subject::with(['teachers' => function ($query) {
+        $query->where('role_id', 2); // فقط المدرّسين
+    }])->findOrFail($subjectId);
 
-   
-    $teachers = $teacherSubjects->pluck('teacher')->filter();
+    $teachers = $subject->teachers->map(function ($teacher) {
+        return [
+            'id' => $teacher->id,
+            'name' => $teacher->name,
+            'email' => $teacher->email,
+            'teacher_image' => $teacher->pivot->teacher_image,
+            'teaching_start_date' => $teacher->pivot->teaching_start_date,
+        ];
+    });
 
-    return response()->json([
-        'teachers' => $teachers
-    ]);
+    return response()->json($teachers);
 }
+
+
 
 
 

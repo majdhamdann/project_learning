@@ -70,12 +70,16 @@ Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherR
 
       Route::post('/import_excel', [ImportController::class, 'import']);
 
+      //انشاء اختبار يدوي 
+      Route::post('/create/test/by/teacher',[TestController::class,'createTestWithQuestions']);  
 
+      //حذف اختبار 
+      Route::delete('/delete/test/{test_id}',[TestController::class,'deleteTest']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
    //للاختبارات الخاصة بالطالب
-Route::post('/tests', [TestController::class, 'createTest']);
+Route::post('/create/test/student', [TestController::class, 'createTest']);
 Route::post('/tests/{testId}/submit', [TestController::class, 'submitAnswers']);
 Route::get('/tests/{testId}/result', [TestController::class, 'getTestResult']);
 
@@ -96,7 +100,7 @@ Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
   Route::delete('/delet-question/{id}', [QuestionController::class, 'deleteQuestion']);
 
 //انشاء رابط للاختبار
-  Route::get('/create-test/{subjectId}', [TestController::class, 'generateTest']);
+  Route::post('/create-test/{subjectId}', [TestController::class, 'generateTest']);
 
 //رؤية اجوبة الطلاب
   Route::get('/view_answar/{testId}', [TestController::class, 'viewStudentAnswers']);
@@ -116,6 +120,14 @@ Route::post('/add/favorite/students',[TeacherController::class,'addFavoriteStude
 //حذف طالب من المفضلة 
 Route::delete('/delete/favorite/student/{student_id}',[TeacherController::class,'removeFavoriteStudent']);
 
+
+//عرض الطلبات للاشتراك بمادة
+Route::get('/admin/subject-requests', [AdminController::class, 'listSubjectRequests']);
+
+//تغيير حالة طلب الاشترك بمادة 
+  Route::post('/admin/subject-requests/{request_id}', [AdminController::class, 'handleSubjectRequest']);
+
+
  });
 
 // امكانية التصفح
@@ -128,17 +140,16 @@ Route::get('/viewlesson/{subjectId}', [LessonController::class, 'getLessons']);
 Route::get('get/subjects', [SubjectController::class, 'getSubjects']);
 
 //عرض الاساتذة لمادة 
-Route::get('/get/teachers/subject/{subject_id}',[SubjectController::class,'getTeachersBySubject']);
+Route::get('/get/teachers/subject/{subject_id}',[SubjectController::class,'getTeachersForSubject']);
 
 
 Route::get('/testsall', [TestController::class, 'getAllTest'])->middleware('auth:sanctum');
 
 
 
-//عرض اختبارت طالب
-Route::get('get/tests/student/{student_id}',[TestController::class,'getTestsByStudent']);
-//عرض اختبارات استاذ
-Route::get('get/tests/teacher/{teacher_id}',[TestController::class,'getTestsByTeacher']);
+//عرض اختبارت طالب او استاذ
+Route::get('get/tests/user/{user_id}',[TestController::class,'getUserTests']);
+
 //عرض اسئلة اختبار معين 
 Route::get('get/questions/test/{test_id}',[TestController::class,'getTestQuestions']);
 //عرض نتيجة اختبار لطالب 
@@ -148,8 +159,21 @@ Route::get('get/full/market/{test_id}',[TestController::class,'getPerfectStudent
 //عرض اختبار درس معين 
 Route::get('get/tests/lesson/{lesson_id}',[TestController::class,'getTestsByLesson']);
 
-//
+//حذف سؤال من اختبار 
+Route::delete('/delete/question/test/{test_id}/{question_id}',[TestController::class,'removeQuestionFromTest']);
 
+//اضافة سؤال لاختبار 
+
+Route::post('/add/question/test/{test_id}/{question_id}',[TestController::class,'addQuestionToTest']);
+
+//عرض جميع نتائج الاختبارات لطالب 
+
+Route::get('/get/all/student/result/test/{student_id}',[TestController::class,'getStudentTestReports']);
+
+
+//عرض دروس استاذ 
+
+Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
 
 
 //طلب الاشترام بمادة 
@@ -172,6 +196,8 @@ Route::get('/get/teachers',[TeacherController::class,'getTeachers']);
 Route::get('/get/students',[StudentController::class,'getStudents']);
 
 
+
+
 //                                      قسم الادمن 
 
 Route::middleware(['auth:sanctum','admin'])->group(function (){
@@ -179,17 +205,11 @@ Route::middleware(['auth:sanctum','admin'])->group(function (){
 //اضافة مادة 
   Route::post('add/subjects', [SubjectController::class, 'addSubject']);
 
-  //تعديل مادة
+ //تعديل مادة
   Route::post('update/subjects/{id}', [SubjectController::class, 'update']);
+
 //حذف مادة
-
   Route::delete('/subjects/{id}', [SubjectController::class, 'destroy']);
-
-//عرض الطلبات للاشتراك بمادة
-  Route::get('/admin/subject-requests', [AdminController::class, 'listSubjectRequests']);
-
-//تغيير حالة طلب الاشترك بمادة 
-  Route::post('/admin/subject-requests/{request_id}', [AdminController::class, 'handleSubjectRequest']);
 
   //عرض طلبات انشاء حساب 
   Route::get('/get/register/requests',[AdminController::class,'registerRequests']);

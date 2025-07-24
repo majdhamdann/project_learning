@@ -17,7 +17,7 @@ use PhpOffice\PhpWord\IOFactory;
 
 class TestController extends Controller
 {
-    public function createTest(Request $request)
+   /* public function createTest(Request $request)
     {
         $validated = $request->validate([
             'lesson_id' => 'required|exists:lessons,id',
@@ -74,6 +74,150 @@ class TestController extends Controller
     }
     
     
+*/
+
+
+public function createTest(Request $request)
+{
+    $lessonIds = json_decode($request->input('lesson_ids'), true);
+
+    if (!is_array($lessonIds) || empty($lessonIds)) {
+        return response()->json(['message' => 'Invalid or empty lesson_ids'], 422);
+    }
+
+    $request->merge(['lesson_ids' => $lessonIds]);
+
+    $validated = $request->validate([
+        'lesson_ids' => 'required|array|min:1',
+        'lesson_ids.*' => 'exists:lessons,id',
+        'questions_count' => 'required|integer|min:1',
+    ]);
+
+    $questions = Question::whereIn('lesson_id', $validated['lesson_ids'])
+        ->with('subQuestions.options', 'parentQuestion')
+        ->inRandomOrder()
+        ->limit($validated['questions_count'])
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'No questions available for the selected lessons'], 404);
+    }
+
+    if (!Auth::check()) {
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    $student_id = Auth::id();
+
+   
+    $firstLesson = Lesson::find($validated['lesson_ids'][0]);
+    $subject_id = $firstLesson->subject_id;
+
+   
+    $test = Test::create([
+        'student_id' => $student_id,
+        'subject_id' => $subject_id,
+    ]);
+
+    // ربط الاختبار مع الدروس في جدول الوسيط
+    $test->lessons()->attach($validated['lesson_ids']);
+
+    // ربط الأسئلة بالاختبار
+    foreach ($questions as $question) {
+        $test->questions()->attach($question->id);
+        foreach ($question->subQuestions as $subQuestion) {
+            $test->questions()->attach($subQuestion->id);
+        }
+    }
+
+    $formattedQuestions = $questions->map(function ($question) {
+        return [
+            'super_question' => $question->parentQuestion ? $question->parentQuestion->question_text : null,
+            'id' => $question->id,
+            'question_text' => $question->question_text,
+            'options' => $question->options->map(function ($option) {
+                return [
+                    'id' => $option->id,
+                    'text' => $option->text ?? 'No text available',
+                ];
+            }),
+        ];
+    });
+
+    return response()->json([
+        'test' => $test,
+        'questions' => $formattedQuestions->values(),
+    ], 201);
+}
+
+
+
+
+public function createTestWithQuestions(Request $request)
+{
+    $questionIds = json_decode($request->input('question_ids'), true);
+
+    if (!is_array($questionIds) || empty($questionIds)) {
+        return response()->json(['message' => 'Invalid or empty question_ids'], 422);
+    }
+
+    $request->merge(['question_ids' => $questionIds]);
+
+    $validated = $request->validate([
+        'question_ids' => 'required|array|min:1',
+        'question_ids.*' => 'exists:questions,id',
+    ]);
+
+    if (!Auth::check()) {
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    $questions = Question::with(['options', 'subQuestions.options', 'parentQuestion'])
+        ->whereIn('id', $validated['question_ids'])
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'No questions found with the given IDs'], 404);
+    }
+
+    $firstQuestion = $questions->first();
+    $firstLesson = Lesson::find($firstQuestion->lesson_id);
+    $subject_id = $firstLesson ? $firstLesson->subject_id : null;
+
+    $test = Test::create([
+        'student_id' => Auth::id(),
+        'subject_id' => $subject_id,
+    ]);
+
+  
+    foreach ($questions as $question) {
+        $test->questions()->attach($question->id);
+        foreach ($question->subQuestions as $subQuestion) {
+            $test->questions()->attach($subQuestion->id);
+        }
+    }
+
+    $formattedQuestions = $questions->map(function ($question) {
+        return [
+            'super_question' => $question->parentQuestion ? $question->parentQuestion->question_text : null,
+            'id' => $question->id,
+            'question_text' => $question->question_text,
+            'options' => $question->options->map(function ($option) {
+                return [
+                    'id' => $option->id,
+                    'text' => $option->text ?? 'No text available',
+                ];
+            }),
+        ];
+    });
+
+    return response()->json([
+        'test' => $test,
+        'questions' => $formattedQuestions->values(),
+    ], 201);
+}
+
+
 
 
     public function getTestResult($testId)
@@ -90,7 +234,7 @@ class TestController extends Controller
     }
 
     
-
+/*
     public function generateTest(Request $request,$subjectId)
     {
         $validated = $request->validate([
@@ -137,6 +281,10 @@ class TestController extends Controller
             'questions' => $questions->pluck('id', 'question_text'), 
         ], 201);
     }
+*/
+
+
+
 
     public function exportTestQuestionsToWord(Request $request)
     {
@@ -183,44 +331,80 @@ class TestController extends Controller
         ]);
     }
     
-  public function submitAnswers(Request $request, $testId)
-{
-    $validated = $request->validate([
-        'answers' => 'required|array',
-    ]);
-
-    $test = Test::with('questions.options')->findOrFail($testId);
-
-    foreach ($validated['answers'] as $questionId => $selectedOptionId) {
-        $question = $test->questions->find($questionId);
-
-        if ($question) {
-            $isCorrect = $question->options()->where('id', $selectedOptionId)->value('is_correct');
-            $isCorrect = $isCorrect !== null ? $isCorrect : false;
-
-            $test->questions()->updateExistingPivot($questionId, [
-                'selected_option_id' => $selectedOptionId,
-                'is_correct' => $isCorrect,
+    public function submitAnswers(Request $request, $testId)
+    {
+        $validated = $request->validate([
+            'answers' => 'required|array',
+        ]);
+    
+        $test = Test::with('questions.options')->findOrFail($testId);
+    
+        
+        $allTestQuestions = $test->questions;
+        $allQuestionIds = $allTestQuestions->pluck('id')->toArray();
+    
+        $submittedAnswers = $validated['answers'];
+    
+      
+        foreach (array_keys($submittedAnswers) as $submittedQuestionId) {
+            if (!in_array($submittedQuestionId, $allQuestionIds)) {
+                return response()->json([
+                    'message' => "السؤال رقم $submittedQuestionId غير موجود في هذا الاختبار."
+                ], 400);
+            }
+        }
+    
+       
+        $answeredQuestionIds = [];
+    
+        foreach ($submittedAnswers as $questionId => $selectedOptionId) {
+            $question = $allTestQuestions->find($questionId);
+    
+            if ($question) {
+                $answeredQuestionIds[] = $questionId;
+    
+                $isCorrect = $question->options()
+                    ->where('id', $selectedOptionId)
+                    ->value('is_correct');
+    
+                $isCorrect = $isCorrect !== null ? $isCorrect : false;
+    
+                $test->questions()->updateExistingPivot($questionId, [
+                    'selected_option_id' => $selectedOptionId,
+                    'is_correct' => $isCorrect,
+                ]);
+            }
+        }
+    
+       
+        $unansweredQuestionIds = array_diff($allQuestionIds, $answeredQuestionIds);
+    
+        foreach ($unansweredQuestionIds as $unansweredId) {
+            $test->questions()->updateExistingPivot($unansweredId, [
+                'selected_option_id' => null,
+                'is_correct' => false,
             ]);
         }
+    
+      
+        $pivotData = $test->questions()->withPivot('is_correct')->get();
+        $correctAnswersCount = $pivotData->where('pivot.is_correct', true)->count();
+        $incorrectAnswersCount = $pivotData->where('pivot.is_correct', false)->count();
+    
+      
+        $test->report()->create([
+            'student_id' => Auth::id(),
+            'correct_answers_count' => $correctAnswersCount,
+            'incorrect_answers_count' => $incorrectAnswersCount,
+        ]);
+    
+        return response()->json([
+            'correct_answers_count' => $correctAnswersCount,
+            'incorrect_answers_count' => $incorrectAnswersCount,
+        ]);
     }
-
-    // إعادة تحميل البيانات بعد التحديث
-    $pivotData = $test->questions()->withPivot('is_correct')->get();
-    $correctAnswersCount = $pivotData->where('pivot.is_correct', true)->count();
-    $incorrectAnswersCount = $pivotData->where('pivot.is_correct', false)->count();
-
-    $test->report()->create([
-        'student_id' => $test->student_id,
-        'correct_answers_count' => $correctAnswersCount,
-        'incorrect_answers_count' => $incorrectAnswersCount,
-    ]);
-
-    return response()->json([
-        'correct_answers_count' => $correctAnswersCount,
-        'incorrect_answers_count' => $incorrectAnswersCount,
-    ]);
-}
+    
+    
 
     public function startTest($test_id)
 {
@@ -274,40 +458,47 @@ class TestController extends Controller
     }
 
 
+// عرض اختبارات مستخدم 
 
-//ارجاع الاختبارات التي قام بها طالب معين 
-public function getTestsByStudent($studentId)
+public function getUserTests($userId)
 {
-    $tests = Test::with(['lesson', 'subject', 'questions.options'])
-        ->where('student_id', $studentId)
-        ->orderBy('created_at', 'desc')
+    $tests = Test::with(['questions.options'])
+        ->where('student_id', $userId)
+        ->latest()
         ->get();
 
+    if ($tests->isEmpty()) {
+        return response()->json([
+            'message' => 'No tests found for this user.'
+        ], 404);
+    }
+
+    $formattedTests = $tests->map(function ($test) {
+        return [
+            'test_id' => $test->id,
+            'subject_id' => $test->subject_id,
+            'questions' => $test->questions->map(function ($question) {
+                return [
+                    'id' => $question->id,
+                    'question_text' => $question->question_text,
+                    'options' => $question->options->map(function ($option) {
+                        return [
+                            'id' => $option->id,
+                            'option' => $option->option_text,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+    });
+
     return response()->json([
-        'student_id' => $studentId,
-        'tests' => $tests
+        'tests' => $formattedTests
     ]);
 }
 
-//الاختبارت لاستاذ معين 
-public function getTestsByTeacher($teacherId)
-{
-    $tests = Test::whereHas('subject', function ($query) use ($teacherId) {
-        $query->where('teacher_id', $teacherId);
-    })
-    ->with([
-        'subject',
-        'lesson',
-        'questions.options' // ← تحميل الأسئلة مع خياراتها
-    ])
-    ->orderBy('created_at', 'desc')
-    ->get();
 
-    return response()->json([
-        'teacher_id' => $teacherId,
-        'tests' => $tests,
-    ]);
-}
+
 
 
 
@@ -348,14 +539,14 @@ public function getPerfectStudents($testId)
 {
     $reports = Report::where('test_id', $testId)
                          ->where('incorrect_answers_count', 0)
-                         ->with('student') // نفترض في علاقة student()
+                         ->with('student') 
                          ->get();
 
     return response()->json([
         'students' => $reports->map(function ($report) {
             return [
                 'student_id' => $report->student_id,
-                'name' => $report->student->name ?? 'Unknown', // إذا عندك علاقة
+                'name' => $report->student->name ?? 'Unknown', 
                 'correct_answers_count' => $report->correct_answers_count,
             ];
         }),
@@ -365,7 +556,7 @@ public function getPerfectStudents($testId)
 //الاختبارات لدرس معين 
 public function getTestsByLesson($lessonId)
 {
-    $tests = Test::with('questions.options') // تحميل الأسئلة مع خياراتها
+    $tests = Test::with('questions.options') 
                  ->where('lesson_id', $lessonId)
                  ->get();
 
@@ -373,8 +564,128 @@ public function getTestsByLesson($lessonId)
 }
 
 
+// حذف اختبار 
+public function deleteTest($testId)
+{
+    $test = Test::find($testId);
+
+    if (!$test) {
+        return response()->json([
+            'message' => 'Test not found.'
+        ], 404);
+    }
+
+   
+    if ($test->student_id !== Auth::id()) {
+        return response()->json([
+            'message' => 'You are not authorized to delete this test.'
+        ], 403);
+    }
+
+   
+    $test->delete();
+
+    return response()->json([
+        'message' => 'Test deleted successfully.'
+    ], 200);
+}
 
 
+
+//حذف سؤال من اختبار 
+
+public function removeQuestionFromTest($testId, $questionId)
+{
+    $test = Test::find($testId);
+
+    if (!$test) {
+        return response()->json([
+            'message' => 'Test not found.'
+        ], 404);
+    }
+
+   
+    if (!$test->questions()->where('question_id', $questionId)->exists()) {
+        return response()->json([
+            'message' => 'This question is not linked to the test.'
+        ], 400);
+    }
+
+   
+    $test->questions()->detach($questionId);
+
+    return response()->json([
+        'message' => 'Question removed from test successfully.'
+    ], 200);
+}
+
+
+//اضافة سؤال لاختبار 
+
+
+public function addQuestionToTest($testId, $questionId)
+{
+    $test = Test::find($testId);
+
+    if (!$test) {
+        return response()->json([
+            'message' => 'Test not found.'
+        ], 404);
+    }
+
+   
+    $questionExists = Question::where('id', $questionId)->exists();
+    if (!$questionExists) {
+        return response()->json([
+            'message' => 'Question not found.'
+        ], 404);
+    }
+
+   
+    if ($test->questions()->where('question_id', $questionId)->exists()) {
+        return response()->json([
+            'message' => 'Question already exists in this test.'
+        ], 409);
+    }
+
+    
+    $test->questions()->attach($questionId);
+
+    return response()->json([
+        'message' => 'Question added to test successfully.'
+    ], 201);
+}
+
+//عرض نتائج جميع الاختبارات لطالب 
+
+
+
+public function getStudentTestReports($studentId)
+{
+    $reports = Report::where('student_id', $studentId)
+        ->latest()
+        ->get();
+
+    if ($reports->isEmpty()) {
+        return response()->json([
+            'message' => 'No test reports found for this student.'
+        ], 404);
+    }
+
+    $formattedReports = $reports->map(function ($report) {
+        return [
+            'report_id' => $report->id,
+            'test_id' => $report->test_id,
+            'correct_answers_count' => $report->correct_answers_count,
+            'incorrect_answers_count' => $report->incorrect_answers_count,
+            'created_at' => $report->created_at->toDateTimeString(),
+        ];
+    });
+
+    return response()->json([
+        'reports' => $formattedReports
+    ]);
+}
 
 
 

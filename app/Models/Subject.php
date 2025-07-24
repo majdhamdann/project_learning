@@ -29,10 +29,13 @@ class Subject extends Model
       //  return $this->hasOne(User::class);
     //}
 
-    public function teacher()
-{
-    return $this->belongsTo(Teacher::class, 'teacher_id');
-}
+    public function teachers()
+    {
+        return $this->belongsToMany(User::class, 'teacher_subject', 'subject_id', 'teacher_id')
+                    ->withPivot('status', 'teacher_image', 'teaching_start_date')
+                    ->withTimestamps();
+    }
+    
 /*
 public function requestedTeachers()
 {

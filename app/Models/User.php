@@ -65,10 +65,13 @@ class User extends Authenticatable
     {
         return $this->hasOne(Subject::class);
     }
-    public function subjects(): BelongsToMany
-{
-    return $this->belongsToMany(Subject::class, 'subject_student', 'student_id', 'subject_id');
-}
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'teacher_subject')
+                    ->withPivot('status', 'teacher_image', 'teaching_start_date') 
+                    ->withTimestamps();
+    }
+    
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -87,6 +90,8 @@ public function teacher()
 {
     return $this->hasOne(Teacher::class, 'user_id'); // تأكد من استخدام 'user_id'
 }
+
+
 
 
 }

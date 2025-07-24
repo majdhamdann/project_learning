@@ -194,25 +194,23 @@ public function removeFavoriteStudent($studentId)
 
 //تقديم طلب الانضمام لمادة 
 
-
 public function requestToJoinSubject(Request $request)
 {
     $validated = $request->validate([
         'subject_id' => 'required|exists:subjects,id',
+        'teacher_image' => 'nullable|string|max:255',
+        'teaching_start_date' => 'nullable|date',
     ]);
 
-    
     $teacher = Teacher::find(auth()->id());
 
-    
     if (!$teacher || $teacher->role_id != 2) {
         return response()->json(['message' => 'This user is not a teacher'], 403);
     }
 
-  
     $subject = Subject::findOrFail($validated['subject_id']);
 
- 
+    // Check for existing request
     if (
         $teacher->subjectRequests()
             ->where('subject_id', $subject->id)
@@ -221,13 +219,18 @@ public function requestToJoinSubject(Request $request)
         return response()->json(['message' => 'A previous request has already been submitted for this subject.'], 400);
     }
 
-  
-    $teacher->subjectRequests()->attach($subject->id, ['status' => 'pending']);
+    // Attach with extra pivot data
+    $teacher->subjectRequests()->attach($subject->id, [
+        'status' => 'pending',
+        'teacher_image' => $validated['teacher_image'] ?? null,
+        'teaching_start_date' => $validated['teaching_start_date'] ?? null,
+    ]);
 
     return response()->json([
         'message' => 'Subscription request has been sent successfully',
     ]);
 }
+
 
 
 
