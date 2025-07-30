@@ -20,7 +20,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name', 'phone', 'password', 'role_id','profile_image','email'
+        'name', 'phone', 'password', 'role_id','user_image','email'
     ];
 
 
@@ -88,9 +88,13 @@ public function subjectRequests()
 
 public function teacher()
 {
-    return $this->hasOne(Teacher::class, 'user_id'); // تأكد من استخدام 'user_id'
+    return $this->hasOne(Teacher::class, 'user_id'); 
 }
 
+public function teacherProfile()
+{
+    return $this->hasOne(TeacherProfile::class, 'user_id');
+}
 
 
 

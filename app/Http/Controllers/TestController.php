@@ -144,6 +144,11 @@ public function createTest(Request $request)
         ];
     });
 
+
+    $test->test_name = 'test_' . $test->id;
+    $test->save();
+
+
     return response()->json([
         'test' => $test,
         'questions' => $formattedQuestions->values(),
@@ -187,9 +192,17 @@ public function createTestWithQuestions(Request $request)
     $test = Test::create([
         'student_id' => Auth::id(),
         'subject_id' => $subject_id,
+        
+        
+        
     ]);
 
-  
+
+
+
+
+
+   
     foreach ($questions as $question) {
         $test->questions()->attach($question->id);
         foreach ($question->subQuestions as $subQuestion) {
@@ -206,13 +219,23 @@ public function createTestWithQuestions(Request $request)
                 return [
                     'id' => $option->id,
                     'text' => $option->text ?? 'No text available',
+                    
                 ];
             }),
         ];
     });
 
+
+   
+   
+
+    $test->test_name = 'test_' . $test->id;
+    $test->save();
+
+
+
     return response()->json([
-        'test' => $test,
+        'teacher_id'=>$test->student->id,
         'questions' => $formattedQuestions->values(),
     ], 201);
 }
@@ -687,6 +710,27 @@ public function getStudentTestReports($studentId)
     ]);
 }
 
+
+//عرض كل الاختبارات 
+
+public function getAllTests() {
+
+
+   
+    {
+        $tests = Test::all();
+    
+        if ($tests->isEmpty()) {
+            return response()->json(['message' => 'No tests found.'], 404);
+        }
+    
+        return response()->json([
+            'tests' => $tests
+        ]);
+    }
+
+
+}
 
 
 }

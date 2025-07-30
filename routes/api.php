@@ -127,6 +127,19 @@ Route::get('/admin/subject-requests', [AdminController::class, 'listSubjectReque
 //تغيير حالة طلب الاشترك بمادة 
   Route::post('/admin/subject-requests/{request_id}', [AdminController::class, 'handleSubjectRequest']);
 
+//اضافة البيانات الاضافية للاستاذ 
+Route::post('/add/details/teacher',[TeacherController::class,'storeTeacherDetails']);
+
+//اضافلة فيديو لدرس
+Route::post('/add/video/lesson/{lesson_id}',[LessonController::class,'uploadLessonVideo']);
+
+//اضافة ملخص لدرس 
+Route::post('/add/summary/lesson/{lesson_id}',[LessonController::class,'uploadLessonSummary']);
+
+
+//عرض طلاب استاذ 
+Route::get('/get/students/teacher',[StudentController::class,'getStudentsForTeacherSubject']);
+
 
  });
 
@@ -195,7 +208,17 @@ Route::get('/get/teachers',[TeacherController::class,'getTeachers']);
 //عرض الطلاب 
 Route::get('/get/students',[StudentController::class,'getStudents']);
 
+// عرض المعلومات الاضافية لاستاذ
+Route::get('/get/profile/teacher/{teacher_id}',[TeacherController::class,'getTeacherProfile']);
 
+
+//اضافة صورة للمستخدم 
+
+Route::middleware('auth:sanctum')->post('/add/image/profile',[AuthController::class,'updateUserImage']);
+
+//عرض الاختبارات 
+
+Route::get('/get/all/tests',[TestController::class,'getAllTests']);
 
 
 //                                      قسم الادمن 
@@ -211,8 +234,8 @@ Route::middleware(['auth:sanctum','admin'])->group(function (){
 //حذف مادة
   Route::delete('/subjects/{id}', [SubjectController::class, 'destroy']);
 
-  //عرض طلبات انشاء حساب 
-  Route::get('/get/register/requests',[AdminController::class,'registerRequests']);
+  //عرض طلبات انشاء حساب
+ Route::get('/get/register/requests',[AdminController::class,'registerRequests']);
 
 //قبول ورفض حالات انشاء حساب 
 Route::post('response/register/{request_id}',[AdminController::class,'updateRequestStatus']);

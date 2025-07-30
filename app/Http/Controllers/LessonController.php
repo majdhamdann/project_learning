@@ -115,7 +115,7 @@ else{
         $validated = $request->validate([
             'title' => 'required', 
             'subject_id' => 'required|exists:subjects,id',
-            'video_path' => 'nullable|string|max:500',
+            
             'summary_path' => 'nullable|string|max:500',
         ]);
     
@@ -137,7 +137,6 @@ else{
         $lesson = Lesson::create([
             'title' => $validated['title'],
             'subject_id' => $validated['subject_id'],
-            'video_path' => $validated['video_path'] ?? null,
             'summary_path' => $validated['summary_path'] ?? null,
             'teacher_id' => $teacherId, 
         ]);
@@ -189,5 +188,83 @@ else{
     
 
    
+
+//اضافة فيديو لدرس  
+
+
+
+public function uploadLessonVideo(Request $request, $lessonId)
+{
+    $request->validate([
+        'video' => 'required|mimes:mp4,mov,avi,wmv|max:124000', 
+    ], [
+        'video.required' => 'Video file is required.',
+        'video.mimes' => 'Only MP4, MOV, AVI, and WMV formats are allowed.',
+        'video.max' => 'Video size must not exceed 100MB.',
+    ]);
+
+  
+    $lesson = Lesson::findOrFail($lessonId);
+
+    if ($request->hasFile('video')) {
+        $file = $request->file('video');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+
+       
+        $file->move(public_path('lessons_video'), $fileName);
+
+      
+        $lesson->video_path = url('lessons_video/' . $fileName);
+        $lesson->save();
+
+        return response()->json([
+            'message' => 'Video uploaded and saved successfully.',
+            'video_url' => $lesson->video_path,
+        ]);
+    }
+
+    return response()->json(['message' => 'No video file found.'], 400);
+}
+
+
+
+// اضافة ملخص لدرس 
+
+
+
+public function uploadLessonSummary(Request $request, $lessonId)
+{
+    $request->validate([
+        'summary' => 'required|mimes:pdf,doc,docx,txt|max:10240', 
+    ], [
+        'summary.required' => 'Summary file is required.',
+        'summary.mimes' => 'Only PDF, DOC, DOCX and TXT files are allowed.',
+        'summary.max' => 'Summary size must not exceed 10MB.',
+    ]);
+
+    
+    $lesson = Lesson::findOrFail($lessonId);
+
+    if ($request->hasFile('summary')) {
+        $file = $request->file('summary');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+
+        
+        $file->move(public_path('lessons_summary'), $fileName);
+
+       
+        $lesson->summary_path = url('lessons_summary/' . $fileName);
+        $lesson->save();
+
+        return response()->json([
+            'message' => 'Summary uploaded and saved successfully.',
+            'summary_url' => $lesson->summary_path,
+        ]);
+    }
+
+    return response()->json(['message' => 'No summary file found.'], 400);
+}
+
+
 
 }

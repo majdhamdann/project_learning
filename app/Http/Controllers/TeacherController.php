@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Teacher;
 use App\models\Student;
 use App\Models\Subject;
+use App\Models\TeacherProfile;
 use App\Models\TeacherSubject;
 use Illuminate\Support\Facades\DB;
 
@@ -198,8 +199,7 @@ public function requestToJoinSubject(Request $request)
 {
     $validated = $request->validate([
         'subject_id' => 'required|exists:subjects,id',
-        'teacher_image' => 'nullable|string|max:255',
-        'teaching_start_date' => 'nullable|date',
+        
     ]);
 
     $teacher = Teacher::find(auth()->id());
@@ -210,7 +210,7 @@ public function requestToJoinSubject(Request $request)
 
     $subject = Subject::findOrFail($validated['subject_id']);
 
-    // Check for existing request
+    
     if (
         $teacher->subjectRequests()
             ->where('subject_id', $subject->id)
@@ -219,11 +219,10 @@ public function requestToJoinSubject(Request $request)
         return response()->json(['message' => 'A previous request has already been submitted for this subject.'], 400);
     }
 
-    // Attach with extra pivot data
+    
     $teacher->subjectRequests()->attach($subject->id, [
         'status' => 'pending',
-        'teacher_image' => $validated['teacher_image'] ?? null,
-        'teaching_start_date' => $validated['teaching_start_date'] ?? null,
+        
     ]);
 
     return response()->json([
@@ -256,4 +255,57 @@ public function getTeacherRequests()
 
 
 
+// اضافة بيانات الاستاذ الاضافية 
+
+public function storeTeacherDetails(Request $request)
+{
+    $request->validate([
+        'bio' => 'nullable|string',
+        'specialization' => 'nullable|string',
+        'experience_years' => 'nullable|integer',
+        'city' => 'nullable|string',
+        'province' => 'nullable|string',
+        'teaching_start_date' => 'nullable|date',
+        'age' => 'nullable|string'
+    ]);
+
+    $teacherId = auth()->id(); 
+
+    $data = $request->all();
+
+    $teacherInfo = TeacherProfile::updateOrCreate(
+        ['teacher_id' => $teacherId],
+        $data
+    );
+
+    return response()->json([
+        'message' => 'Teacher info saved successfully',
+        'teacher_info' => $teacherInfo,
+    ]);
 }
+
+
+//عرض المعومات الاضافية للاستاذ
+public function getTeacherProfile($teacherId)
+{
+   
+
+    $profile = TeacherProfile::where('teacher_id', $teacherId)->first();
+
+    if (!$profile) {
+        return response()->json(['message' => 'Teacher profile not found'], 404);
+    }
+
+    return response()->json($profile);
+
+}
+
+
+
+}
+
+
+
+
+
+
