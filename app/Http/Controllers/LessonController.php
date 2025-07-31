@@ -116,7 +116,7 @@ else{
             'title' => 'required', 
             'subject_id' => 'required|exists:subjects,id',
             
-            'summary_path' => 'nullable|string|max:500',
+            
         ]);
     
         $teacherId = auth()->id(); 

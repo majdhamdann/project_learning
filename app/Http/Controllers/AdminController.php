@@ -89,17 +89,17 @@ public function registerRequests()
 
 
 
-//قبول ورفض حالات انشاء حساب 
+
 
 public function updateRequestStatus(Request $request, $id)
 {
     $validated = $request->validate([
-        'status' => 'required|in:accept,reject', // نستقبل accept أو reject فقط
+        'status' => 'required|in:accept,reject', 
     ]);
 
     $user = User::findOrFail($id);
 
-    // تحويل القيمة
+  
     if ($validated['status'] === 'accept') {
         $user->status = 'accepted';
     } elseif ($validated['status'] === 'reject') {
@@ -152,19 +152,41 @@ public function registerTeacher(Request $request)
 
 
 
-//عرض الملفات الشخصية 
+//عرض جميع المستخدمين  
 
-public function getUser()
+public function getUsers()
 {
+    $admins = User::where('role_id',3)->get();
     $students = User::where('role_id', 1)->get();
     $teachers = User::where('role_id', 2)->get();
 
     return response()->json([
         'students' => $students,
         'teachers' => $teachers,
+        'admins' => $admins,
     ]);
 }
+  
 
+
+//عرض مستخدم معين 
+
+
+public function getUser()
+{
+
+$user_id = auth()->id();
+$user = User::where('id',$user_id)->get();
+
+return response()->json([
+
+'user' => $user
+
+]);
+
+
+
+}
 
 
 //عرض طلبات الاساتذة للانضمام لمادة 

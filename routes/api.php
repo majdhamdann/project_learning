@@ -220,6 +220,11 @@ Route::middleware('auth:sanctum')->post('/add/image/profile',[AuthController::cl
 
 Route::get('/get/all/tests',[TestController::class,'getAllTests']);
 
+//عرض مستخدم 
+Route::middleware('auth:sanctum')->get('/get/user',[AdminController::class,'getUser']);
+
+//عرض اختبار 
+Route::post('/get/test',[TestController::class,'getTest']);
 
 //                                      قسم الادمن 
 
@@ -244,7 +249,7 @@ Route::post('response/register/{request_id}',[AdminController::class,'updateRequ
 Route::post('/register/teacher',[AdminController::class,'registerTeacher']);
 
 //عرض المستخدمين 
-Route::get('/get/user',[AdminController::class,'getUser']);
+Route::get('/get/users',[AdminController::class,'getUsers']);
 
 //عرض طلبات الاساتذة للانضمام لمادة 
 Route::get('/get/request/join/subject',[AdminController::class,'getPendingTeacherSubjectRequests']);
