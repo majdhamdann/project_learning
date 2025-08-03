@@ -76,6 +76,7 @@ class TestController extends Controller
     
 */
 
+// انشاء اختبارات عن طريق الطالب 
 
 public function createTest(Request $request)
 {
@@ -94,7 +95,7 @@ public function createTest(Request $request)
     ]);
 
     $questions = Question::whereIn('lesson_id', $validated['lesson_ids'])
-        ->with('subQuestions.options', 'parentQuestion')
+        ->with(['options', 'subQuestions.options', 'parentQuestion'])
         ->inRandomOrder()
         ->limit($validated['questions_count'])
         ->get();
@@ -107,22 +108,19 @@ public function createTest(Request $request)
         return response()->json(['message' => 'User not authenticated'], 401);
     }
 
-    $student_id = Auth::id();
+    $user_id = Auth::id();
 
-   
     $firstLesson = Lesson::find($validated['lesson_ids'][0]);
     $subject_id = $firstLesson->subject_id;
 
-   
+    
     $test = Test::create([
-        'student_id' => $student_id,
+        'user_id' => $user_id,
         'subject_id' => $subject_id,
     ]);
 
-   
+  
     $test->lessons()->attach($validated['lesson_ids']);
-
-   
     foreach ($questions as $question) {
         $test->questions()->attach($question->id);
         foreach ($question->subQuestions as $subQuestion) {
@@ -130,45 +128,44 @@ public function createTest(Request $request)
         }
     }
 
-    $formattedQuestions = $questions->map(function ($question) {
-        return [
-            'super_question' => $question->parentQuestion ? $question->parentQuestion->question_text : null,
-            'id' => $question->id,
-            'question_text' => $question->question_text,
-            'options' => $question->options->map(function ($option) {
-                return [
-                    'id' => $option->id,
-                    'text' => $option->text ?? 'No text available',
-                ];
-            }),
-        ];
-    });
-
+   
+    $questions->load('options', 'subQuestions.options', 'parentQuestion');
 
     $test->test_name = 'test_' . $test->id;
     $test->save();
 
-
     return response()->json([
-        'test' => $test,
-        'questions' => $formattedQuestions->values(),
+        'test' => collect($test)->merge([
+            'user_id' => $test->user_id
+        ])->except(['student_id']),
+        'questions' => $questions,
     ], 201);
 }
 
 
+
+
+// انشاء اختبار عن طريق الاستاذ
 public function createTestWithQuestions(Request $request)
 {
     $questionIds = $request->has('question_ids') ? json_decode($request->input('question_ids'), true) : [];
+    $lessonIds = $request->has('lesson_ids') ? json_decode($request->input('lesson_ids'), true) : [];
 
     if (!is_array($questionIds)) {
         return response()->json(['message' => 'Invalid question_ids format'], 422);
     }
 
-    $request->merge(['question_ids' => $questionIds]);
+    if (!is_array($lessonIds)) {
+        return response()->json(['message' => 'Invalid lesson_ids format'], 422);
+    }
+
+    $request->merge(['question_ids' => $questionIds, 'lesson_ids' => $lessonIds]);
 
     $validated = $request->validate([
         'question_ids' => 'nullable|array',
         'question_ids.*' => 'exists:questions,id',
+        'lesson_ids' => 'required|array|min:1',
+        'lesson_ids.*' => 'exists:lessons,id',
     ]);
 
     if (!Auth::check()) {
@@ -177,11 +174,11 @@ public function createTestWithQuestions(Request $request)
 
     $teacherId = Auth::id();
 
-    
     $subject_id = DB::table('teacher_subject')
         ->where('teacher_id', $teacherId)
         ->value('subject_id');
 
+   
     $questions = collect();
     if (!empty($validated['question_ids'])) {
         $questions = Question::with(['options', 'subQuestions.options', 'parentQuestion'])
@@ -189,11 +186,13 @@ public function createTestWithQuestions(Request $request)
             ->get();
     }
 
+  
     $test = Test::create([
-        'student_id' => $teacherId,
+        'user_id' => $teacherId,
         'subject_id' => $subject_id,
     ]);
 
+   
     foreach ($questions as $question) {
         $test->questions()->attach($question->id);
         foreach ($question->subQuestions as $subQuestion) {
@@ -201,30 +200,22 @@ public function createTestWithQuestions(Request $request)
         }
     }
 
-    $formattedQuestions = $questions->map(function ($question) {
-        return [
-            'super_question' => $question->parentQuestion ? $question->parentQuestion->question_text : null,
-            'id' => $question->id,
-            'question_text' => $question->question_text,
-            'options' => $question->options->map(function ($option) {
-                return [
-                    'id' => $option->id,
-                    'text' => $option->text ?? 'No text available',
-                ];
-            }),
-        ];
-    });
+  
+    $test->lessons()->attach($validated['lesson_ids']);
+
+    
+    $questions->load('options', 'subQuestions.options', 'parentQuestion');
 
     $test->test_name = 'test_' . $test->id;
     $test->save();
 
     return response()->json([
         'test' => collect($test)->merge([
-            'user_id' => $test->student_id
+            'user_id' => $test->user_id
         ])->except(['student_id']),
-        'questions' => $formattedQuestions->values(),
+        'questions' => $questions,
+        'lessons' => $validated['lesson_ids']
     ], 201);
-    
 }
 
 
@@ -546,7 +537,7 @@ public function getTestQuestions($testId)
 }
 
 
-//نتيجة الاختبار 
+
 public function getTestReport($testId, $studentId)
 {
     $report = Report::where('test_id', $testId)

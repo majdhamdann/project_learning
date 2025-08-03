@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tests', function (Blueprint $table) {
+        Schema::create('tests_teacher_favorite', function (Blueprint $table) {
             $table->id();
-          //  $table->foreignId('teacher_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained()->nullable()->change();
-            $table->string('test_name')->nullable();
             $table->timestamps();
+            $table->foreignId('teacher_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('test_id')->references('id')->on('tests')->onDelete('cascade');
+
+    $table->unique(['teacher_id', 'test_id']);
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tests');
+        Schema::dropIfExists('tests_teacher_favorite');
     }
 };

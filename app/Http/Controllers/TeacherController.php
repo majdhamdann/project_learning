@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Models\Teacher;
 use App\models\Student;
 use App\Models\Subject;
+use App\Models\Test;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\TeacherProfile;
 use App\Models\TeacherSubject;
 use Illuminate\Support\Facades\DB;
@@ -298,6 +301,54 @@ public function getTeacherProfile($teacherId)
 
     return response()->json($profile);
 
+}
+
+
+
+//اضافة اختبار للمفضلة 
+
+
+public function addFavoriteTest($testId)
+{
+    
+
+    $teacher = Auth::user();
+   
+
+ 
+    $test = Test::find($testId);
+
+   
+    if ($test->user_id !== $teacher->id) {
+        return response()->json(['message' => 'You can only add tests you created to favorites.'], 403);
+    }
+
+   
+    if (!$teacher->favoriteTests()->where('test_id', $testId)->exists()) {
+        $teacher->favoriteTests()->attach($testId);
+        return response()->json(['message' => 'Test added to favorites successfully.']);
+    }
+
+    return response()->json(['message' => 'Test is already in favorites.']);
+}
+
+// حذف اختبار من المفضلة 
+
+public function removeFavoriteTest($testId)
+{
+    $teacherId = auth()->id(); 
+
+    
+    $deleted = DB::table('tests_teacher_favorite')
+        ->where('teacher_id', $teacherId)
+        ->where('test_id', $testId)
+        ->delete();
+
+    if ($deleted) {
+        return response()->json(['message' => 'Test removed from favorites successfully.']);
+    } else {
+        return response()->json(['message' => 'Favorite test not found or not authorized.'], 404);
+    }
 }
 
 

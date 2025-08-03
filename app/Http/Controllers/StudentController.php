@@ -162,6 +162,34 @@ public function getStudentsForTeacherSubject()
     ]);
 }
 
+//عرض الاختبارات من المفضلة 
+
+public function getTeacherFavoriteTests( $teacherId)
+{
+    $studentId = auth()->id(); 
+
+   
+    $isFavorite = DB::table('teacher_favorite')
+        ->where('teacher_id', $teacherId)
+        ->where('student_id', $studentId)
+        ->exists();
+
+    if (!$isFavorite) {
+        return response()->json(['message' => 'You are not in the teacher favorites list.'], 403);
+    }
+
+    
+    $tests = DB::table('tests_teacher_favorite')
+        ->join('tests', 'tests.id', '=', 'tests_teacher_favorite.test_id')
+        ->where('tests_teacher_favorite.teacher_id', $teacherId)
+        ->select('tests.*')
+        ->get();
+
+    return response()->json([
+        'teacher_id' => $teacherId,
+        'tests' => $tests
+    ]);
+}
 
 
 

@@ -97,5 +97,11 @@ public function teacherProfile()
 }
 
 
+public function favoriteTests()
+{
+    return $this->belongsToMany(Test::class, 'tests_teacher_favorite', 'teacher_id', 'test_id');
+}
+
+
 
 }

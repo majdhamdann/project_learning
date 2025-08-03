@@ -6,6 +6,7 @@ use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\Subject;
 use Illuminate\Http\Request;
+use App\Models\Comment;
 use App\Models\TeacherSubject;
 
 class LessonController extends Controller
@@ -263,6 +264,62 @@ public function uploadLessonSummary(Request $request, $lessonId)
     }
 
     return response()->json(['message' => 'No summary file found.'], 400);
+}
+
+
+
+
+// اضافة تعليق على فيديو 
+
+
+public function addComment(Request $request)
+{
+    $validated = $request->validate([
+        'lesson_id' => 'required|exists:lessons,id',
+        'content' => 'required|string',
+        'parent_id' => 'nullable|exists:comments,id', 
+    ]);
+
+    $userId = auth()->id();
+
+    $comment = Comment::create([
+        'lesson_id' => $validated['lesson_id'],
+        'user_id' => $userId,
+        'content' => $validated['content'],
+        'parent_id' => $validated['parent_id'] ?? null,
+    ]);
+
+    return response()->json([
+        'message' => 'Comment added successfully',
+        'comment' => $comment
+    ], 201);
+}
+
+
+
+//عرض التعليقات 
+
+public function getLessonComments($lessonId)
+{
+    $comments = Comment::where('lesson_id', $lessonId)
+        ->whereNull('parent_id') 
+        ->with('user') 
+        ->get();
+
+    return response()->json($comments);
+}
+
+
+// عرض الردود على تعليق
+
+
+public function getCommentReplies($commentId)
+{
+    $replies = Comment::where('parent_id', $commentId)
+        ->with('user') 
+        ->get();
+
+    return response()->json($replies);
 }
 
 

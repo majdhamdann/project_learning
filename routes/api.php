@@ -92,6 +92,11 @@ Route::get('/test/{test}', function (Test $test) {
 })->name('test.show')->middleware('signed');
 });
 
+
+
+//            //             قسم الاستاذ 
+
+
 Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
   //اضافة,حذف سؤال
   Route::post('/add-question', [QuestionController::class, 'addQuestionWithOptions']);
@@ -140,8 +145,34 @@ Route::post('/add/summary/lesson/{lesson_id}',[LessonController::class,'uploadLe
 //عرض طلاب استاذ 
 Route::get('/get/students/teacher',[StudentController::class,'getStudentsForTeacherSubject']);
 
+//اضافة اختبار للمفضلة 
+Route::post('/add/test/to/favorite/teacher/{test_id}',[TeacherController::class,'addFavoriteTest']);
+
+//حذف اختبار من المفضلة 
+Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController::class,'removeFavoriteTest']);
 
  });
+
+
+
+//           //            قسم الطالب  
+
+
+Route::middleware(['auth:sanctum', 'student'])->group(function () {
+
+
+Route::get('/get/tests/from/favorite/{teacher_id}',[StudentController::class,'getTeacherFavoriteTests']);
+
+
+
+
+
+
+});
+
+
+
+
 
 // امكانية التصفح
 Route::get('/lessons/viewallQuestion/{subjectId}', [LessonController::class, 'viewAllQuestion'])->middleware('auth:sanctum');
@@ -226,7 +257,31 @@ Route::middleware('auth:sanctum')->get('/get/user',[AdminController::class,'getU
 //عرض اختبار 
 Route::post('/get/test',[TestController::class,'getTest']);
 
-//                                      قسم الادمن 
+
+
+
+
+//                  //            قسم مشترك 
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+
+
+//اضافة تعليق 
+Route::post('/add/comment',[LessonController::class,'addComment']);
+
+//عرض التعليقات 
+Route::get('/get/comment/lesson/{lesson_id}',[LessonController::class,'getLessonComments']);
+
+//عرض الردود على تعليق 
+Route::get('/get/replies/comment/{comment_id}',[LessonController::class,'getCommentReplies']);
+});
+
+
+//               //                    قسم الادمن 
+
+
+
 
 Route::middleware(['auth:sanctum','admin'])->group(function (){
 
@@ -256,5 +311,12 @@ Route::get('/get/request/join/subject',[AdminController::class,'getPendingTeache
 
 //قبول ورفض طلبات الاساتذة 
 Route::post('/response/teacher/join/subject/{request_id}',[AdminController::class,'handleTeacherSubjectRequest']);
+
+//حذف مستخدم 
+Route::delete('/delete/user/{user_id}',[AdminController::class,'deleteUser']);
+
+//حذف استاذ من مادة 
+Route::post('/delete/teacher/from/subject',[AdminController::class,'removeTeacherFromSubject']);
+
 
        });

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\Lesson;
+use App\Models\Comment;
 use App\Models\SubjectStudent;
 use App\Models\TeacherSubject;
 use App\Models\Teacher;
@@ -216,7 +218,7 @@ public function handleTeacherSubjectRequest(Request $request,$id)
 
     $requestRow = TeacherSubject::findOrFail($id);
 
-    // تحويل القيمة
+   
     $statusMap = [
         'accept' => 'accepted',
         'reject' => 'rejected',
@@ -230,4 +232,47 @@ public function handleTeacherSubjectRequest(Request $request,$id)
         'request' => $requestRow->load(['teacher', 'subject']),
     ]);
 }
+
+//حذف مستخدم 
+
+
+public function deleteUser($id)
+{
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    $user->delete();
+
+    return response()->json(['message' => 'User and related data deleted successfully'], 200);
+}
+
+
+// حذف استاذ من مادة 
+
+
+public function removeTeacherFromSubject(Request $request)
+{
+    $validated = $request->validate([
+        'teacher_id' => 'required|exists:teacher_subject,teacher_id',
+        'subject_id' => 'required|exists:teacher_subject,subject_id',
+    ]);
+
+    
+    TeacherSubject::where('teacher_id', $validated['teacher_id'])
+        ->where('subject_id', $validated['subject_id'])
+        ->delete();
+
+  
+    Lesson::where('teacher_id', $validated['teacher_id'])
+        ->where('subject_id', $validated['subject_id'])
+        ->delete();
+
+    return response()->json([
+        'message' => 'Teacher and their lessons removed from subject successfully'
+    ], 200);
+}
+
 }
