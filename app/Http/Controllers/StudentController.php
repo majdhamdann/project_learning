@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\Test;
 use App\Models\SubjectRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -164,32 +165,33 @@ public function getStudentsForTeacherSubject()
 
 //عرض الاختبارات من المفضلة 
 
-public function getTeacherFavoriteTests( $teacherId)
-{
-    $studentId = auth()->id(); 
 
-   
-    $isFavorite = DB::table('teacher_favorite')
+public function getTeacherFavoriteTests($teacherId)
+{
+    $student = auth()->user();
+
+  
+    $exists = DB::table('teacher_favorite')
         ->where('teacher_id', $teacherId)
-        ->where('student_id', $studentId)
+        ->where('student_id', $student->id)
         ->exists();
 
-    if (!$isFavorite) {
-        return response()->json(['message' => 'You are not in the teacher favorites list.'], 403);
+    if (!$exists) {
+        return response()->json(['message' => 'You are not allowed to view this teacher tests.'], 403);
     }
 
     
-    $tests = DB::table('tests_teacher_favorite')
-        ->join('tests', 'tests.id', '=', 'tests_teacher_favorite.test_id')
-        ->where('tests_teacher_favorite.teacher_id', $teacherId)
-        ->select('tests.*')
+    $tests = Test::with('questions.options')
+        ->where('user_id', $teacherId)
+        ->where('is_favorite', true)
         ->get();
 
-    return response()->json([
-        'teacher_id' => $teacherId,
-        'tests' => $tests
-    ]);
+    return response()->json(['test '=> $tests]);
 }
+
+
+
+
 
 
 

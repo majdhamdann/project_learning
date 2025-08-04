@@ -160,14 +160,8 @@ Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController:
 
 Route::middleware(['auth:sanctum', 'student'])->group(function () {
 
-
+//عرض الاختبارات من المفضلة 
 Route::get('/get/tests/from/favorite/{teacher_id}',[StudentController::class,'getTeacherFavoriteTests']);
-
-//عرض الاسئلة من المفضلة 
-Route::get('/get/question/lesson/favorite/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteByLesson']);
-
-//عرض اسئلة المفضلة مع اختيارات 
-Route::get('/get/question/lesson/favorite/with/options/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteWithOptionsByLesson']);
 
 
 
@@ -197,8 +191,7 @@ Route::get('/testsall', [TestController::class, 'getAllTest'])->middleware('auth
 
 
 
-//عرض اختبارت طالب او استاذ
-Route::get('get/tests/user/{user_id}',[TestController::class,'getUserTests']);
+
 
 //عرض اسئلة اختبار معين 
 Route::get('get/questions/test/{test_id}',[TestController::class,'getTestQuestions']);
@@ -281,6 +274,17 @@ Route::get('/get/comment/lesson/{lesson_id}',[LessonController::class,'getLesson
 
 //عرض الردود على تعليق 
 Route::get('/get/replies/comment/{comment_id}',[LessonController::class,'getCommentReplies']);
+
+//عرض اختبارت طالب او استاذ
+Route::get('get/tests/user',[TestController::class,'getUserTests']);
+
+
+//عرض الاسئلة من المفضلة 
+Route::get('/get/question/lesson/favorite/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteByLesson']);
+
+//عرض اسئلة المفضلة مع اختيارات 
+Route::get('/get/question/lesson/favorite/with/options/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteWithOptionsByLesson']);
+
 });
 
 

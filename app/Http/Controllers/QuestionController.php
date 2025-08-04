@@ -174,66 +174,63 @@ public function getQuestionsWithOptionsByLesson($lesson_id)
 }
 
    //عرض الاسئلة المفضلة للطالب 
-
    public function getQuestionsFavoriteByLesson($lesson_id)
-{
+   {
+       $lesson = Lesson::find($lesson_id);
+       if (!$lesson) {
+           return response()->json(['message' => 'Lesson not found.'], 404);
+       }
    
-    $lesson = Lesson::find($lesson_id);
-    if (!$lesson) {
-        return response()->json(['message' => 'Lesson not found.'], 404);
-    }
-
-    
-    $studentId = auth()->id();
-
+       $userId = auth()->id();
    
-    $exists = DB::table('teacher_favorite')
-        ->where('teacher_id', $lesson->teacher_id)
-        ->where('student_id', $studentId)
-        ->exists();
-
-    if (!$exists) {
-        return response()->json(['message' => 'You are not authorized to view questions for this lesson.'], 403);
-    }
-
-    
-    $questions = Question::where('lesson_id', $lesson_id)
-        ->where('is_favorite', true)
-        ->get();
-
-    if ($questions->isEmpty()) {
-        return response()->json(['message' => 'No questions found for this lesson.'], 404);
-    }
-
-    return response()->json($questions);
-}
-
+     
+       if ($lesson->teacher_id !== $userId) {
+          
+           $exists = DB::table('teacher_favorite')
+               ->where('teacher_id', $lesson->teacher_id)
+               ->where('student_id', $userId)
+               ->exists();
+   
+           if (!$exists) {
+               return response()->json(['message' => 'You are not authorized to view questions for this lesson.'], 403);
+           }
+       }
+   
+       $questions = Question::where('lesson_id', $lesson_id)
+           ->where('is_favorite', true)
+           ->get();
+   
+       if ($questions->isEmpty()) {
+           return response()->json(['message' => 'No questions found for this lesson.'], 404);
+       }
+   
+       return response()->json($questions);
+   }
+   
 
 // عرض الاسئلة المفضلة مع اختيارات 
 
-
 public function getQuestionsFavoriteWithOptionsByLesson($lesson_id)
 {
-   
     $lesson = Lesson::find($lesson_id);
     if (!$lesson) {
         return response()->json(['message' => 'Lesson not found.'], 404);
     }
 
+    $userId = auth()->id();
+
     
-    $studentId = auth()->id();
+    if ($lesson->teacher_id !== $userId) {
+        $exists = DB::table('teacher_favorite')
+            ->where('teacher_id', $lesson->teacher_id)
+            ->where('student_id', $userId)
+            ->exists();
 
-   
-    $exists = DB::table('teacher_favorite')
-        ->where('teacher_id', $lesson->teacher_id)
-        ->where('student_id', $studentId)
-        ->exists();
-
-    if (!$exists) {
-        return response()->json(['message' => 'You are not authorized to view questions for this lesson.'], 403);
+        if (!$exists) {
+            return response()->json(['message' => 'You are not authorized to view questions for this lesson.'], 403);
+        }
     }
 
-    
     $questions = Question::with('options')
         ->where('lesson_id', $lesson_id)
         ->where('is_favorite', true)

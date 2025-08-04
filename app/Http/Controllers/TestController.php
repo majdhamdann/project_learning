@@ -206,7 +206,9 @@ public function createTestWithQuestions(Request $request)
     $test->lessons()->attach($validated['lesson_ids']);
 
     
-    $questions->load('options', 'subQuestions.options', 'parentQuestion');
+    if ($questions->isNotEmpty()) {
+        $questions->load('options', 'subQuestions.options', 'parentQuestion');
+    }
 
     $test->test_name = 'test_' . $test->id;
     $test->save();
@@ -487,10 +489,12 @@ return response()->json(['test'=>$test]);
 public function getUserTests()
 {
 
-$userId = auth::id();
+    $userId = Auth()->id();
+
 
     $tests = Test::with(['questions.options'])
-        ->where('student_id', $userId)
+        ->where('user_id', $userId)
+       // ->where('is_favorite', false)
         ->latest()
         ->get();
 
@@ -504,6 +508,8 @@ $userId = auth::id();
         return [
             'test_id' => $test->id,
             'subject_id' => $test->subject_id,
+            'is_favorite' =>$test->is_favorite,
+        
             'questions' => $test->questions->map(function ($question) {
                 return [
                     'id' => $question->id,
@@ -523,6 +529,10 @@ $userId = auth::id();
         'tests' => $formattedTests
     ]);
 }
+
+
+
+
 
 
 
