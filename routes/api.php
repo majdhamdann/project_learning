@@ -280,10 +280,10 @@ Route::get('get/tests/user',[TestController::class,'getUserTests']);
 
 
 //عرض الاسئلة من المفضلة 
-Route::get('/get/question/lesson/favorite/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteByLesson']);
+Route::get('/get/question/lesson/favorite/{teacher_id}',[QuestionController::class,'getQuestionsFavoriteByTeacher']);
 
 //عرض اسئلة المفضلة مع اختيارات 
-Route::get('/get/question/lesson/favorite/with/options/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteWithOptionsByLesson']);
+Route::get('/get/question/lesson/favorite/with/options/{teacher_id}',[QuestionController::class,'getFavoriteQuestionsWithOptionsByTeacher']);
 
 });
 
