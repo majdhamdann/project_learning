@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Question extends Model
+class QuestionFavorite extends Model
 {
     use HasFactory;
-    protected $fillable = ['content', 'lesson_id', 'page_number', 'explanation','question_text','parent_question_id','is_favorite'];
+
+
+    
+    protected $fillable = ['content', 'lesson_id', 'page_number', 'explanation','question_text','parent_question_id'];
     public function tests()
     {
         return $this->belongsToMany(Test::class, 'test_questions', 'question_id', 'test_id');

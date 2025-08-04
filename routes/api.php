@@ -163,6 +163,12 @@ Route::middleware(['auth:sanctum', 'student'])->group(function () {
 
 Route::get('/get/tests/from/favorite/{teacher_id}',[StudentController::class,'getTeacherFavoriteTests']);
 
+//عرض الاسئلة من المفضلة 
+Route::get('/get/question/lesson/favorite/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteByLesson']);
+
+//عرض اسئلة المفضلة مع اختيارات 
+Route::get('/get/question/lesson/favorite/with/options/{lesson_id}',[QuestionController::class,'getQuestionsFavoriteWithOptionsByLesson']);
+
 
 
 
@@ -317,6 +323,12 @@ Route::delete('/delete/user/{user_id}',[AdminController::class,'deleteUser']);
 
 //حذف استاذ من مادة 
 Route::post('/delete/teacher/from/subject',[AdminController::class,'removeTeacherFromSubject']);
+
+//عرض مواد استاذ 
+Route::get('get/subjects/teacher/{teacherId}', [AdminController::class, 'getTeacherSubjects']);
+ 
+//عرض كامل معومات الاستاذ 
+Route::get('/get/all/profile/teacher/{teacher_id}',[AdminController::class,'getTeacherDetails']);
 
 
        });

@@ -166,6 +166,7 @@ public function createTestWithQuestions(Request $request)
         'question_ids.*' => 'exists:questions,id',
         'lesson_ids' => 'required|array|min:1',
         'lesson_ids.*' => 'exists:lessons,id',
+        'is_favorite' => 'sometimes|boolean'
     ]);
 
     if (!Auth::check()) {
@@ -190,6 +191,7 @@ public function createTestWithQuestions(Request $request)
     $test = Test::create([
         'user_id' => $teacherId,
         'subject_id' => $subject_id,
+        'is_favorite' => $validated['is_favorite'] ?? false,
     ]);
 
    
@@ -482,8 +484,11 @@ return response()->json(['test'=>$test]);
 
 // عرض اختبارات مستخدم 
 
-public function getUserTests($userId)
+public function getUserTests()
 {
+
+$userId = auth::id();
+
     $tests = Test::with(['questions.options'])
         ->where('student_id', $userId)
         ->latest()
@@ -578,12 +583,24 @@ public function getPerfectStudents($testId)
 //الاختبارات لدرس معين 
 public function getTestsByLesson($lessonId)
 {
-    $tests = Test::with('questions.options') 
-                 ->where('lesson_id', $lessonId)
-                 ->get();
+    $tests = Test::with('questions.options', 'user') 
+        ->whereHas('lessons', function ($query) use ($lessonId) {
+            $query->where('lessons.id', $lessonId);
+        })
+        ->where('is_favorite', false)
+        ->whereHas('user', function ($query) {
+            $query->where('role_id', 2);
+        })
+        ->get();
+
+    if ($tests->isEmpty()) {
+        return response()->json(['message' => 'No tests found for this lesson.'], 404);
+    }
 
     return response()->json($tests);
 }
+
+
 
 
 // حذف اختبار 

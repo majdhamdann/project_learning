@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('subject_id')->constrained()->nullable()->change();
             $table->string('test_name')->nullable();
+            $table->boolean('is_favorite')->default(false);
             $table->timestamps();
         });
     }

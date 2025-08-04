@@ -45,6 +45,12 @@ public function subject()
     return $this->belongsTo(Subject::class);
 }
 
+public function user()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+
+
 public function favoritedByTeachers()
 {
     return $this->belongsTo(User::class, 'tests_teacher_favorite', 'test_id', 'teacher_id');

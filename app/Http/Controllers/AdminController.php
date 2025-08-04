@@ -275,4 +275,51 @@ public function removeTeacherFromSubject(Request $request)
     ], 200);
 }
 
+
+
+// عرض مواد استاذ
+
+public function getTeacherSubjects($teacherId)
+{
+    $teacher = User::with('subjects')->find($teacherId);
+
+    if (!$teacher) {
+        return response()->json(['message' => 'Teacher not found'], 404);
+    }
+
+    return response()->json([
+        'teacher_id' => $teacher->id,
+        'subjects' => $teacher->subjects
+    ]);
+}
+
+
+ //عرض كامل معلومات الاستاذ
+
+
+ public function getTeacherDetails($teacherId)
+ {
+     $teacher = User::findOrFail($teacherId);
+ 
+     
+     $teacherProfile = DB::table('teacher_profiles')
+         ->where('teacher_id', $teacherId)
+         ->first();
+ 
+    
+     $subjects = DB::table('subjects')
+         ->join('teacher_subject', 'subjects.id', '=', 'teacher_subject.subject_id')
+         ->where('teacher_subject.teacher_id', $teacherId)
+         ->select('subjects.*')
+         ->get();
+ 
+     return response()->json([
+         'teacher' => $teacher,
+         'profile' => $teacherProfile,
+         'subjects' => $subjects
+     ]);
+ }
+ 
+
+
 }

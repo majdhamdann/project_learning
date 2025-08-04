@@ -13,14 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('questions', function (Blueprint $table) {
+        Schema::create('question_favorites', function (Blueprint $table) {
             $table->id();
             $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
             $table->text('question_text');
             $table->integer('page_number')->nullable();
             $table->text('explanation')->nullable();
             $table->foreignId('parent_question_id')->nullable()->constrained('questions')->onDelete('cascade');
-            $table->boolean('is_favorite')->default(false);
             $table->timestamps();
         });
     }
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('questions');
+        Schema::dropIfExists('question_favorites');
     }
 };

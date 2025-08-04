@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Option;
 use App\Models\Question;
+use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,14 +23,16 @@ public function addQuestionWithOptions(Request $request)
         'options.*.option_image' => 'sometimes|nullable|file|mimes:jpeg,png,jpg,gif',
         'correct_option' => 'required|integer',
         'explanation' => 'nullable|string',
-        'parent_question_id' => 'sometimes|nullable|exists:questions,id'
+        'parent_question_id' => 'sometimes|nullable|exists:questions,id',
+        'is_favorite' => 'sometimes|boolean'
     ]);
 
     $question = Question::create([
         'lesson_id' => $validated['lesson_id'],
         'question_text' => $validated['question_text'],
         'page_number' => $validated['page_number'] ?? null,
-        'explanation' => $validated['explanation'] ?? null  
+        'explanation' => $validated['explanation'] ?? null,
+        'is_favorite' => $validated['is_favorite'] ?? false,
     ]);
 
     foreach ($validated['options'] as $index => $optionData) {
@@ -141,30 +144,103 @@ public function updateOption(Request $request, $questionId, $optionId)
     ], 200);
 }
 
-
-
+//عرض اسئلة درس 
 public function getQuestionsByLesson($lesson_id)
 {
-    // استرجاع كل الأسئلة المرتبطة بالدرس المعين
-    $questions = Question::where('lesson_id', $lesson_id)->get();
+    $questions = Question::where('lesson_id', $lesson_id)
+        ->where('is_favorite', false) 
+        ->get();
 
     if ($questions->isEmpty()) {
-        return response()->json(['message' => 'لا توجد أسئلة لهذا الدرس.'], 404);
+        return response()->json(['message' => 'No questions found for this lesson.'], 404);
+    }
+
+    return response()->json($questions);
+}
+
+//عرض اسئلة درس مع خيارات 
+public function getQuestionsWithOptionsByLesson($lesson_id)
+{
+    $questions = Question::with('options')
+        ->where('lesson_id', $lesson_id)
+        ->where('is_favorite', false) 
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'No questions found for this lesson.'], 404);
+    }
+
+    return response()->json($questions);
+}
+
+   //عرض الاسئلة المفضلة للطالب 
+
+   public function getQuestionsFavoriteByLesson($lesson_id)
+{
+   
+    $lesson = Lesson::find($lesson_id);
+    if (!$lesson) {
+        return response()->json(['message' => 'Lesson not found.'], 404);
+    }
+
+    
+    $studentId = auth()->id();
+
+   
+    $exists = DB::table('teacher_favorite')
+        ->where('teacher_id', $lesson->teacher_id)
+        ->where('student_id', $studentId)
+        ->exists();
+
+    if (!$exists) {
+        return response()->json(['message' => 'You are not authorized to view questions for this lesson.'], 403);
+    }
+
+    
+    $questions = Question::where('lesson_id', $lesson_id)
+        ->where('is_favorite', true)
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'No questions found for this lesson.'], 404);
     }
 
     return response()->json($questions);
 }
 
 
-public function getQuestionsWithOptionsByLesson($lesson_id)
+// عرض الاسئلة المفضلة مع اختيارات 
+
+
+public function getQuestionsFavoriteWithOptionsByLesson($lesson_id)
 {
-    // استرجاع الأسئلة المرتبطة بالدرس مع الاختيارات لكل سؤال
+   
+    $lesson = Lesson::find($lesson_id);
+    if (!$lesson) {
+        return response()->json(['message' => 'Lesson not found.'], 404);
+    }
+
+    
+    $studentId = auth()->id();
+
+   
+    $exists = DB::table('teacher_favorite')
+        ->where('teacher_id', $lesson->teacher_id)
+        ->where('student_id', $studentId)
+        ->exists();
+
+    if (!$exists) {
+        return response()->json(['message' => 'You are not authorized to view questions for this lesson.'], 403);
+    }
+
+    
     $questions = Question::with('options')
         ->where('lesson_id', $lesson_id)
+        ->where('is_favorite', true)
         ->get();
 
     if ($questions->isEmpty()) {
-        return response()->json(['message' => 'لا توجد أسئلة لهذا الدرس.'], 404);
+        return response()->json(['message' => 'No questions found for this lesson.'], 404);
     }
 
     return response()->json($questions);
