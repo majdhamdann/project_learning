@@ -32,7 +32,7 @@ class Subject extends Model
     public function teachers()
     {
         return $this->belongsToMany(User::class, 'teacher_subject', 'subject_id', 'teacher_id')
-                    ->withPivot('status', 'teacher_image', 'teaching_start_date')
+                    ->withPivot('status',)
                     ->withTimestamps();
     }
     

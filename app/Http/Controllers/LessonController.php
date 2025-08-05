@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\Subject;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 use App\Models\TeacherSubject;
@@ -163,15 +165,37 @@ else{
     }
 
     
-
-    public function getLessonsForTeacherSubject(Request $request,$teacherId)
+    public function getLessonsForTeacherSubject(Request $request, $teacherId)
     {
-       
-    
         $request->validate([
             'subject_id' => 'required|exists:subjects,id',
         ]);
     
+        $userId = auth()->id();
+        $user = User::find($userId);
+    
+        if (!$user) {
+            return response()->json(['message' => 'User not found.'], 404);
+        }
+    
+       
+        if ($user->role_id != 2) {
+            
+            $isAccepted = DB::table('subject_student')
+                ->where('user_id', $userId)
+                ->where('teacher_id', $teacherId)
+                ->where('subject_id', $request->subject_id)
+                ->where('status', 'accepted')
+                ->exists();
+    
+            if (!$isAccepted) {
+                return response()->json([
+                    'message' => 'You are not authorized to view lessons for this subject.'
+                ], 403);
+            }
+        }
+    
+       
         $lessons = Lesson::where('teacher_id', $teacherId)
             ->where('subject_id', $request->subject_id)
             ->get();
@@ -186,6 +210,7 @@ else{
             'lessons' => $lessons
         ]);
     }
+    
     
 
    

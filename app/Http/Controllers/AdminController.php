@@ -56,7 +56,7 @@ public function handleSubjectRequest(Request $request, $id)
 
     $subjectStudent = SubjectStudent::findOrFail($id);
 
-    // التحقق إذا كان هذا الطلب يخص الأستاذ المسجل دخوله
+   
     if ($subjectStudent->teacher_id !== $teacher->id) {
         return response()->json(['message' => 'You are not authorized to manage this request.'], 403);
     }

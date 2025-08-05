@@ -149,23 +149,16 @@ public function createTest(Request $request)
 public function createTestWithQuestions(Request $request)
 {
     $questionIds = $request->has('question_ids') ? json_decode($request->input('question_ids'), true) : [];
-    $lessonIds = $request->has('lesson_ids') ? json_decode($request->input('lesson_ids'), true) : [];
 
     if (!is_array($questionIds)) {
         return response()->json(['message' => 'Invalid question_ids format'], 422);
     }
 
-    if (!is_array($lessonIds)) {
-        return response()->json(['message' => 'Invalid lesson_ids format'], 422);
-    }
-
-    $request->merge(['question_ids' => $questionIds, 'lesson_ids' => $lessonIds]);
+    $request->merge(['question_ids' => $questionIds]);
 
     $validated = $request->validate([
         'question_ids' => 'nullable|array',
         'question_ids.*' => 'exists:questions,id',
-        'lesson_ids' => 'required|array|min:1',
-        'lesson_ids.*' => 'exists:lessons,id',
         'is_favorite' => 'sometimes|boolean'
     ]);
 
@@ -179,7 +172,6 @@ public function createTestWithQuestions(Request $request)
         ->where('teacher_id', $teacherId)
         ->value('subject_id');
 
-   
     $questions = collect();
     if (!empty($validated['question_ids'])) {
         $questions = Question::with(['options', 'subQuestions.options', 'parentQuestion'])
@@ -187,14 +179,12 @@ public function createTestWithQuestions(Request $request)
             ->get();
     }
 
-  
     $test = Test::create([
         'user_id' => $teacherId,
         'subject_id' => $subject_id,
         'is_favorite' => $validated['is_favorite'] ?? true,
     ]);
 
-   
     foreach ($questions as $question) {
         $test->questions()->attach($question->id);
         foreach ($question->subQuestions as $subQuestion) {
@@ -202,10 +192,6 @@ public function createTestWithQuestions(Request $request)
         }
     }
 
-  
-    $test->lessons()->attach($validated['lesson_ids']);
-
-    
     if ($questions->isNotEmpty()) {
         $questions->load('options', 'subQuestions.options', 'parentQuestion');
     }
@@ -218,10 +204,8 @@ public function createTestWithQuestions(Request $request)
             'user_id' => $test->user_id
         ])->except(['student_id']),
         'questions' => $questions,
-        'lessons' => $validated['lesson_ids']
     ], 201);
 }
-
 
 
     public function getTestResult($testId)

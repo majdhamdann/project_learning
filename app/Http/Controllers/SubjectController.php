@@ -143,7 +143,7 @@ public function removeStudentFromSubject(Request $request, $subjectId)
 
 public function getSubjects()
 {
-    // استرجاع جميع المواد مع المعلومات المرتبطة بالأستاذ
+   
     $subjects = Subject::all();
 
     return response()->json([
@@ -156,7 +156,7 @@ public function getSubjects()
 public function getTeachersForSubject($subjectId)
 {
     $subject = Subject::with(['teachers' => function ($query) {
-        $query->where('role_id', 2); // فقط المدرّسين
+        $query->where('role_id', 2); 
     }])->findOrFail($subjectId);
 
     $teachers = $subject->teachers->map(function ($teacher) {
@@ -164,8 +164,7 @@ public function getTeachersForSubject($subjectId)
             'id' => $teacher->id,
             'name' => $teacher->name,
             'email' => $teacher->email,
-            'teacher_image' => $teacher->pivot->teacher_image,
-            'teaching_start_date' => $teacher->pivot->teaching_start_date,
+           
         ];
     });
 

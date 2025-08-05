@@ -214,11 +214,6 @@ Route::post('/add/question/test/{test_id}/{question_id}',[TestController::class,
 Route::get('/get/all/student/result/test/{student_id}',[TestController::class,'getStudentTestReports']);
 
 
-//عرض دروس استاذ 
-
-Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
-
-
 //طلب الاشترام بمادة 
 Route::middleware(['auth:sanctum'])->post('/student/request-subject', [StudentController::class, 'requestSubject']);
 
@@ -284,6 +279,12 @@ Route::get('/get/question/lesson/favorite/{teacher_id}',[QuestionController::cla
 
 //عرض اسئلة المفضلة مع اختيارات 
 Route::get('/get/question/lesson/favorite/with/options/{teacher_id}',[QuestionController::class,'getFavoriteQuestionsWithOptionsByTeacher']);
+
+
+//عرض دروس استاذ 
+
+Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
+
 
 });
 

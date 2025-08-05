@@ -44,11 +44,11 @@ public function subscribe(Request $request)
     $student = Student::find($request->student_id);
     $subject_id = $request->subject_id;
 
-    // تحقق من وجود اشتراك سابق
+   
     if ($student->subjects()->where('subject_id', $subject_id)->exists()) {
         return response()->json([
             'message' => 'تم تقديم طلب مسبق لهذه المادة.',
-        ], 409); // 409 Conflict
+        ], 409); 
     }
 
   
