@@ -191,7 +191,7 @@ public function createTestWithQuestions(Request $request)
     $test = Test::create([
         'user_id' => $teacherId,
         'subject_id' => $subject_id,
-        'is_favorite' => $validated['is_favorite'] ?? false,
+        'is_favorite' => $validated['is_favorite'] ?? true,
     ]);
 
    
