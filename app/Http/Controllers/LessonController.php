@@ -149,20 +149,35 @@ else{
             'message' => 'Lesson added successfully.'
         ]);
     }
+    public function deleteLesson($id)
+    {
+        $teacherId = auth()->id(); 
     
-    public function deleteLesson($id){
-      $lesson=Lesson::where('id',$id)->with('questions.options')->delete();
-      if($lesson){
+        
+        $lesson = Lesson::find($id);
+    
+        
+        if (!$lesson) {
+            return response()->json([
+                'message' => 'Lesson not found.'
+            ], 404);
+        }
+    
+        
+        if ($lesson->teacher_id !== $teacherId) {
+            return response()->json([
+                'error' => 'You are not authorized to delete this lesson.'
+            ], 403);
+        }
+    
+        
+        $lesson->delete();
+    
         return response()->json([
-            'messege'=>'تم حذف الدرس بنجاح'
+            'message' => 'Lesson deleted successfully.'
         ]);
-      }
-      else{
-        return response()->json([
-            'messege'=>'الدرس غير موجود'
-        ]);
-      }
     }
+    
 
     
     public function getLessonsForTeacherSubject(Request $request, $teacherId)

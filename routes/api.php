@@ -48,12 +48,6 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
    
 
 
-//طلب الانضمام لمادة 
-
-Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
-
-//عرض حالة الطلب للانضمام لمادة 
-Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherRequests']);
 
         //اضافة طلاب للمادة
      Route::post('/subjects/{subject}/students', [SubjectController::class, 'addStudentsToSubject']);
@@ -62,11 +56,7 @@ Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherR
 
       // ادارة الدروس
 
-      //اضافة درس 
-      Route::post('/add/lesson', [LessonController::class, 'addlesson']);
-
-      //حذف درس
-      Route::delete('/delete/lesson/{id}', [LessonController::class, 'deleteLesson']);
+     
 
       Route::post('/import_excel', [ImportController::class, 'import']);
 
@@ -150,6 +140,20 @@ Route::post('/add/test/to/favorite/teacher/{test_id}',[TeacherController::class,
 
 //حذف اختبار من المفضلة 
 Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController::class,'removeFavoriteTest']);
+
+ //اضافة درس 
+ Route::post('/add/lesson', [LessonController::class, 'addlesson']);
+
+ //حذف درس
+ Route::delete('/delete/lesson/{id}', [LessonController::class, 'deleteLesson']);
+
+ 
+//طلب الانضمام لمادة 
+
+Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
+
+//عرض حالة الطلب للانضمام لمادة 
+Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherRequests']);
 
  });
 
