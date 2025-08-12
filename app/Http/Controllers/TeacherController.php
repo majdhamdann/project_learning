@@ -11,6 +11,8 @@ use App\Models\Test;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\TeacherProfile;
+use App\Models\Question;
+use App\Models\Lesson;
 use App\Models\TeacherSubject;
 use Illuminate\Support\Facades\DB;
 
@@ -352,6 +354,31 @@ public function removeFavoriteTest($testId)
 }
 
 
+
+
+//عرض كل اسئلة الاستاذ
+public function getAllQuestionsByTeacher()
+{
+    $teacherId = auth()->id(); 
+
+    
+    $lessonIds = Lesson::where('teacher_id', $teacherId)->pluck('id');
+
+    if ($lessonIds->isEmpty()) {
+        return response()->json(['message' => 'No lessons found for this teacher.'], 404);
+    }
+
+    
+    $questions = Question::with('options')
+        ->whereIn('lesson_id', $lessonIds)
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'No questions found for this teacher.'], 404);
+    }
+
+    return response()->json($questions);
+}
 
 
 

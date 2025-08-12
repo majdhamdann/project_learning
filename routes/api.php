@@ -155,6 +155,9 @@ Route::post('/request/teacher/join/subject',[TeacherController::class,'requestTo
 //عرض حالة الطلب للانضمام لمادة 
 Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherRequests']);
 
+//عرض كامل اسئلة الاستاذ 
+Route::get('/get/all/questions/by/teacher',[TeacherController::class,'getAllQuestionsByTeacher']);
+
  });
 
 
