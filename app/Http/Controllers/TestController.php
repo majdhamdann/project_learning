@@ -332,7 +332,7 @@ public function createTestWithQuestions(Request $request)
     }
     
     public function submitAnswers(Request $request, $testId)
-    {
+    { 
         $validated = $request->validate([
             'answers' => 'required|array',
         ]);
