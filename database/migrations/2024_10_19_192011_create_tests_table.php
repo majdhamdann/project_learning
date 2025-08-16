@@ -16,9 +16,10 @@ return new class extends Migration
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
           //  $table->foreignId('teacher_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('student_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('subject_id')->constrained()->nullable()->change();
-          ///  $table->foreignId('lesson_id')->constrained()->nullable()->change();
+            $table->string('test_name')->nullable();
+            $table->boolean('is_favorite')->default(false);
             $table->timestamps();
         });
     }

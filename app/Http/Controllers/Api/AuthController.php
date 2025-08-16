@@ -89,29 +89,40 @@ class AuthController extends Controller
     }
 
 
-    public function updateImage(Request $request)
-{
-    $request->validate([
-        'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', 
-    ]);
-
-    $user = Auth::user();
-
-
-    if ($request->hasFile('profile_image')) {
-        $path = $request->file('profile_image')->store('profile_images', 'public');
-
-        if ($user->profile_image) {
-            Storage::disk('public')->delete($user->profile_image);
+    public function updateUserImage(Request $request)
+    {
+        $request->validate([
+            'user_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+    
+        $teacherId = auth()->id();
+    
+        
+        $teacher = User::findOrFail($teacherId);
+    
+       
+        if ($teacher->teacher_image) {
+            $oldPath = public_path(parse_url($teacher->teacher_image, PHP_URL_PATH));
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
         }
-        $user->profile_image = $path;
+    
+       
+        $file = $request->file('user_image');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $file->move(public_path('uploads/user_profiles'), $fileName);
+    
+        
+        $imagePath = url('uploads/user_profiles/' . $fileName);
+        $teacher->update(['user_image' => $imagePath]);
+    
+        return response()->json([
+            'message' => 'User image updated successfully',
+            'user_image' => $imagePath
+        ]);
     }
-
-   
-    $user->save();
- 
-    return response()->json(['message' => 'User updated successfully', 'user' => $user]);
-}
+    
 
     public function changePassword(Request $request)
     {

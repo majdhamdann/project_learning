@@ -48,12 +48,6 @@ Route::middleware(['auth:sanctum','teacher'])->group(function () {
    
 
 
-//طلب الانضمام لمادة 
-
-Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
-
-//عرض حالة الطلب للانضمام لمادة 
-Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherRequests']);
 
         //اضافة طلاب للمادة
      Route::post('/subjects/{subject}/students', [SubjectController::class, 'addStudentsToSubject']);
@@ -62,11 +56,7 @@ Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherR
 
       // ادارة الدروس
 
-      //اضافة درس 
-      Route::post('/add/lesson', [LessonController::class, 'addlesson']);
-
-      //حذف درس
-      Route::delete('/delete/lesson/{id}', [LessonController::class, 'deleteLesson']);
+     
 
       Route::post('/import_excel', [ImportController::class, 'import']);
 
@@ -91,6 +81,11 @@ Route::get('/test/{test}', function (Test $test) {
     return response()->json($test->load('questions.options'));
 })->name('test.show')->middleware('signed');
 });
+
+
+
+//            //             قسم الاستاذ 
+
 
 Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
   //اضافة,حذف سؤال
@@ -130,8 +125,72 @@ Route::get('/admin/subject-requests', [AdminController::class, 'listSubjectReque
 //تغيير حالة طلب الاشترك بمادة 
   Route::post('/admin/subject-requests/{request_id}', [AdminController::class, 'handleSubjectRequest']);
 
+//اضافة البيانات الاضافية للاستاذ 
+Route::post('/add/details/teacher',[TeacherController::class,'storeTeacherDetails']);
+
+//اضافلة فيديو لدرس
+Route::post('/add/video/lesson/{lesson_id}',[LessonController::class,'uploadLessonVideo']);
+
+//اضافة ملخص لدرس 
+Route::post('/add/summary/lesson/{lesson_id}',[LessonController::class,'uploadLessonSummary']);
+
+
+//عرض طلاب استاذ 
+Route::get('/get/students/teacher',[StudentController::class,'getStudentsForTeacherSubject']);
+
+//اضافة اختبار للمفضلة 
+Route::post('/add/test/to/favorite/teacher/{test_id}',[TeacherController::class,'addFavoriteTest']);
+
+//حذف اختبار من المفضلة 
+Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController::class,'removeFavoriteTest']);
+
+ //اضافة درس 
+ Route::post('/add/lesson', [LessonController::class, 'addlesson']);
+
+ //حذف درس
+ Route::delete('/delete/lesson/{id}', [LessonController::class, 'deleteLesson']);
+
+ 
+//طلب الانضمام لمادة 
+
+Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
+
+//عرض حالة الطلب للانضمام لمادة 
+Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherRequests']);
+
+//عرض كامل اسئلة الاستاذ 
+Route::get('/get/all/questions/by/teacher',[TeacherController::class,'getAllQuestionsByTeacher']);
+
+//انشاء تحدي 
+Route::post('/create/challenge',[TeacherController::class,'createChallenge']);
+
+//اضافة سؤال للتحدي 
+Route::post('/add/question/challenge/{challenge_id}',[TeacherController::class,'addQuestionToChallenge']);
+
 
  });
+
+
+
+//           //            قسم الطالب  
+
+
+Route::middleware(['auth:sanctum', 'student'])->group(function () {
+
+//عرض الاختبارات من المفضلة 
+Route::get('/get/tests/from/favorite/{teacher_id}',[StudentController::class,'getTeacherFavoriteTests']);
+
+//عرض الاساتذة اللي ضافو الطالب عالمفضلة 
+Route::get('/get/teachers/favorite/student',[StudentController::class,'getFavoriteTeachersForStudent']);
+
+
+
+
+});
+
+
+
+
 
 // امكانية التصفح
 Route::get('/lessons/viewallQuestion/{subjectId}', [LessonController::class, 'viewAllQuestion'])->middleware('auth:sanctum');
@@ -150,8 +209,7 @@ Route::get('/testsall', [TestController::class, 'getAllTest'])->middleware('auth
 
 
 
-//عرض اختبارت طالب او استاذ
-Route::get('get/tests/user/{user_id}',[TestController::class,'getUserTests']);
+
 
 //عرض اسئلة اختبار معين 
 Route::get('get/questions/test/{test_id}',[TestController::class,'getTestQuestions']);
@@ -174,11 +232,6 @@ Route::post('/add/question/test/{test_id}/{question_id}',[TestController::class,
 Route::get('/get/all/student/result/test/{student_id}',[TestController::class,'getStudentTestReports']);
 
 
-//عرض دروس استاذ 
-
-Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
-
-
 //طلب الاشترام بمادة 
 Route::middleware(['auth:sanctum'])->post('/student/request-subject', [StudentController::class, 'requestSubject']);
 
@@ -198,10 +251,66 @@ Route::get('/get/teachers',[TeacherController::class,'getTeachers']);
 //عرض الطلاب 
 Route::get('/get/students',[StudentController::class,'getStudents']);
 
+// عرض المعلومات الاضافية لاستاذ
+Route::get('/get/profile/teacher/{teacher_id}',[TeacherController::class,'getTeacherProfile']);
+
+
+//اضافة صورة للمستخدم 
+
+Route::middleware('auth:sanctum')->post('/add/image/profile',[AuthController::class,'updateUserImage']);
+
+//عرض الاختبارات 
+
+Route::get('/get/all/tests',[TestController::class,'getAllTests']);
+
+//عرض مستخدم 
+Route::middleware('auth:sanctum')->get('/get/user',[AdminController::class,'getUser']);
+
+//عرض اختبار 
+Route::post('/get/test',[TestController::class,'getTest']);
 
 
 
-//                                      قسم الادمن 
+
+
+//                  //            قسم مشترك 
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+
+
+//اضافة تعليق 
+Route::post('/add/comment',[LessonController::class,'addComment']);
+
+//عرض التعليقات 
+Route::get('/get/comment/lesson/{lesson_id}',[LessonController::class,'getLessonComments']);
+
+//عرض الردود على تعليق 
+Route::get('/get/replies/comment/{comment_id}',[LessonController::class,'getCommentReplies']);
+
+//عرض اختبارت طالب او استاذ
+Route::get('get/tests/user',[TestController::class,'getUserTests']);
+
+
+//عرض الاسئلة من المفضلة 
+Route::get('/get/question/lesson/favorite/{teacher_id}',[QuestionController::class,'getQuestionsFavoriteByTeacher']);
+
+//عرض اسئلة المفضلة مع اختيارات 
+Route::get('/get/question/lesson/favorite/with/options/{teacher_id}',[QuestionController::class,'getFavoriteQuestionsWithOptionsByTeacher']);
+
+
+//عرض دروس استاذ 
+
+Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
+
+
+});
+
+
+//               //                    قسم الادمن 
+
+
+
 
 Route::middleware(['auth:sanctum','admin'])->group(function (){
 
@@ -214,8 +323,8 @@ Route::middleware(['auth:sanctum','admin'])->group(function (){
 //حذف مادة
   Route::delete('/subjects/{id}', [SubjectController::class, 'destroy']);
 
-  //عرض طلبات انشاء حساب 
-  Route::get('/get/register/requests',[AdminController::class,'registerRequests']);
+  //عرض طلبات انشاء حساب
+ Route::get('/get/register/requests',[AdminController::class,'registerRequests']);
 
 //قبول ورفض حالات انشاء حساب 
 Route::post('response/register/{request_id}',[AdminController::class,'updateRequestStatus']);
@@ -224,12 +333,25 @@ Route::post('response/register/{request_id}',[AdminController::class,'updateRequ
 Route::post('/register/teacher',[AdminController::class,'registerTeacher']);
 
 //عرض المستخدمين 
-Route::get('/get/user',[AdminController::class,'getUser']);
+Route::get('/get/users',[AdminController::class,'getUsers']);
 
 //عرض طلبات الاساتذة للانضمام لمادة 
 Route::get('/get/request/join/subject',[AdminController::class,'getPendingTeacherSubjectRequests']);
 
 //قبول ورفض طلبات الاساتذة 
 Route::post('/response/teacher/join/subject/{request_id}',[AdminController::class,'handleTeacherSubjectRequest']);
+
+//حذف مستخدم 
+Route::delete('/delete/user/{user_id}',[AdminController::class,'deleteUser']);
+
+//حذف استاذ من مادة 
+Route::post('/delete/teacher/from/subject',[AdminController::class,'removeTeacherFromSubject']);
+
+//عرض مواد استاذ 
+Route::get('get/subjects/teacher/{teacherId}', [AdminController::class, 'getTeacherSubjects']);
+ 
+//عرض كامل معومات الاستاذ 
+Route::get('/get/all/profile/teacher/{teacher_id}',[AdminController::class,'getTeacherDetails']);
+
 
        });

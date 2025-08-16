@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\Lesson;
+use App\Models\Comment;
 use App\Models\SubjectStudent;
 use App\Models\TeacherSubject;
 use App\Models\Teacher;
@@ -54,7 +56,7 @@ public function handleSubjectRequest(Request $request, $id)
 
     $subjectStudent = SubjectStudent::findOrFail($id);
 
-    // التحقق إذا كان هذا الطلب يخص الأستاذ المسجل دخوله
+   
     if ($subjectStudent->teacher_id !== $teacher->id) {
         return response()->json(['message' => 'You are not authorized to manage this request.'], 403);
     }
@@ -89,17 +91,17 @@ public function registerRequests()
 
 
 
-//قبول ورفض حالات انشاء حساب 
+
 
 public function updateRequestStatus(Request $request, $id)
 {
     $validated = $request->validate([
-        'status' => 'required|in:accept,reject', // نستقبل accept أو reject فقط
+        'status' => 'required|in:accept,reject', 
     ]);
 
     $user = User::findOrFail($id);
 
-    // تحويل القيمة
+  
     if ($validated['status'] === 'accept') {
         $user->status = 'accepted';
     } elseif ($validated['status'] === 'reject') {
@@ -152,19 +154,41 @@ public function registerTeacher(Request $request)
 
 
 
-//عرض الملفات الشخصية 
+//عرض جميع المستخدمين  
 
-public function getUser()
+public function getUsers()
 {
+    $admins = User::where('role_id',3)->get();
     $students = User::where('role_id', 1)->get();
     $teachers = User::where('role_id', 2)->get();
 
     return response()->json([
         'students' => $students,
         'teachers' => $teachers,
+        'admins' => $admins,
     ]);
 }
+  
 
+
+//عرض مستخدم معين 
+
+
+public function getUser()
+{
+
+$user_id = auth()->id();
+$user = User::where('id',$user_id)->get();
+
+return response()->json([
+
+'user' => $user
+
+]);
+
+
+
+}
 
 
 //عرض طلبات الاساتذة للانضمام لمادة 
@@ -194,7 +218,7 @@ public function handleTeacherSubjectRequest(Request $request,$id)
 
     $requestRow = TeacherSubject::findOrFail($id);
 
-    // تحويل القيمة
+   
     $statusMap = [
         'accept' => 'accepted',
         'reject' => 'rejected',
@@ -208,4 +232,94 @@ public function handleTeacherSubjectRequest(Request $request,$id)
         'request' => $requestRow->load(['teacher', 'subject']),
     ]);
 }
+
+//حذف مستخدم 
+
+
+public function deleteUser($id)
+{
+    $user = User::find($id);
+
+    if (!$user) {
+        return response()->json(['message' => 'User not found'], 404);
+    }
+
+    $user->delete();
+
+    return response()->json(['message' => 'User and related data deleted successfully'], 200);
+}
+
+
+// حذف استاذ من مادة 
+
+
+public function removeTeacherFromSubject(Request $request)
+{
+    $validated = $request->validate([
+        'teacher_id' => 'required|exists:teacher_subject,teacher_id',
+        'subject_id' => 'required|exists:teacher_subject,subject_id',
+    ]);
+
+    
+    TeacherSubject::where('teacher_id', $validated['teacher_id'])
+        ->where('subject_id', $validated['subject_id'])
+        ->delete();
+
+  
+    Lesson::where('teacher_id', $validated['teacher_id'])
+        ->where('subject_id', $validated['subject_id'])
+        ->delete();
+
+    return response()->json([
+        'message' => 'Teacher and their lessons removed from subject successfully'
+    ], 200);
+}
+
+
+
+// عرض مواد استاذ
+
+public function getTeacherSubjects($teacherId)
+{
+    $teacher = User::with('subjects')->find($teacherId);
+
+    if (!$teacher) {
+        return response()->json(['message' => 'Teacher not found'], 404);
+    }
+
+    return response()->json([
+        'teacher_id' => $teacher->id,
+        'subjects' => $teacher->subjects
+    ]);
+}
+
+
+ //عرض كامل معلومات الاستاذ
+
+
+ public function getTeacherDetails($teacherId)
+ {
+     $teacher = User::findOrFail($teacherId);
+ 
+     
+     $teacherProfile = DB::table('teacher_profiles')
+         ->where('teacher_id', $teacherId)
+         ->first();
+ 
+    
+     $subjects = DB::table('subjects')
+         ->join('teacher_subject', 'subjects.id', '=', 'teacher_subject.subject_id')
+         ->where('teacher_subject.teacher_id', $teacherId)
+         ->select('subjects.*')
+         ->get();
+ 
+     return response()->json([
+         'teacher' => $teacher,
+         'profile' => $teacherProfile,
+         'subjects' => $subjects
+     ]);
+ }
+ 
+
+
 }

@@ -7,6 +7,13 @@ use App\Models\User;
 use App\Models\Teacher;
 use App\models\Student;
 use App\Models\Subject;
+use App\Models\Test;
+use App\Models\Challenge;
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\TeacherProfile;
+use App\Models\Question;
+use App\Models\Lesson;
 use App\Models\TeacherSubject;
 use Illuminate\Support\Facades\DB;
 
@@ -197,8 +204,7 @@ public function requestToJoinSubject(Request $request)
 {
     $validated = $request->validate([
         'subject_id' => 'required|exists:subjects,id',
-        'teacher_image' => 'nullable|string|max:255',
-        'teaching_start_date' => 'nullable|date',
+        
     ]);
 
     $teacher = Teacher::find(auth()->id());
@@ -209,7 +215,7 @@ public function requestToJoinSubject(Request $request)
 
     $subject = Subject::findOrFail($validated['subject_id']);
 
-    // Check for existing request
+    
     if (
         $teacher->subjectRequests()
             ->where('subject_id', $subject->id)
@@ -218,11 +224,10 @@ public function requestToJoinSubject(Request $request)
         return response()->json(['message' => 'A previous request has already been submitted for this subject.'], 400);
     }
 
-    // Attach with extra pivot data
+    
     $teacher->subjectRequests()->attach($subject->id, [
         'status' => 'pending',
-        'teacher_image' => $validated['teacher_image'] ?? null,
-        'teaching_start_date' => $validated['teaching_start_date'] ?? null,
+        
     ]);
 
     return response()->json([
@@ -255,4 +260,202 @@ public function getTeacherRequests()
 
 
 
+// اضافة بيانات الاستاذ الاضافية 
+
+public function storeTeacherDetails(Request $request)
+{
+    $request->validate([
+        'bio' => 'nullable|string',
+        'specialization' => 'nullable|string',
+        'experience_years' => 'nullable|integer',
+        'city' => 'nullable|string',
+        'province' => 'nullable|string',
+        'teaching_start_date' => 'nullable|date',
+        'age' => 'nullable|string'
+    ]);
+
+    $teacherId = auth()->id(); 
+
+    $data = $request->all();
+
+    $teacherInfo = TeacherProfile::updateOrCreate(
+        ['teacher_id' => $teacherId],
+        $data
+    );
+
+    return response()->json([
+        'message' => 'Teacher info saved successfully',
+        'teacher_info' => $teacherInfo,
+    ]);
 }
+
+
+//عرض المعومات الاضافية للاستاذ
+public function getTeacherProfile($teacherId)
+{
+   
+
+    $profile = TeacherProfile::where('teacher_id', $teacherId)->first();
+
+    if (!$profile) {
+        return response()->json(['message' => 'Teacher profile not found'], 404);
+    }
+
+    return response()->json($profile);
+
+}
+
+
+
+//اضافة اختبار للمفضلة 
+
+
+public function addFavoriteTest($testId)
+{
+    
+
+    $teacher = Auth::user();
+   
+
+ 
+    $test = Test::find($testId);
+
+   
+    if ($test->user_id !== $teacher->id) {
+        return response()->json(['message' => 'You can only add tests you created to favorites.'], 403);
+    }
+
+   
+    if (!$teacher->favoriteTests()->where('test_id', $testId)->exists()) {
+        $teacher->favoriteTests()->attach($testId);
+        return response()->json(['message' => 'Test added to favorites successfully.']);
+    }
+
+    return response()->json(['message' => 'Test is already in favorites.']);
+}
+
+// حذف اختبار من المفضلة 
+
+public function removeFavoriteTest($testId)
+{
+    $teacherId = auth()->id(); 
+
+    
+    $deleted = DB::table('tests_teacher_favorite')
+        ->where('teacher_id', $teacherId)
+        ->where('test_id', $testId)
+        ->delete();
+
+    if ($deleted) {
+        return response()->json(['message' => 'Test removed from favorites successfully.']);
+    } else {
+        return response()->json(['message' => 'Favorite test not found or not authorized.'], 404);
+    }
+}
+
+
+
+
+//عرض كل اسئلة الاستاذ
+public function getAllQuestionsByTeacher()
+{
+    $teacherId = auth()->id(); 
+
+    
+    $lessonIds = Lesson::where('teacher_id', $teacherId)->pluck('id');
+
+    if ($lessonIds->isEmpty()) {
+        return response()->json(['message' => 'No lessons found for this teacher.'], 404);
+    }
+
+    
+    $questions = Question::with('options')
+        ->whereIn('lesson_id', $lessonIds)
+        ->get();
+
+    if ($questions->isEmpty()) {
+        return response()->json(['message' => 'No questions found for this teacher.'], 404);
+    }
+
+    return response()->json($questions);
+}
+
+//انشاء تحدي 
+
+public function createChallenge(Request $request)
+{
+    $teacherId = auth()->id();
+
+    if (!$teacherId) {
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    $validated = $request->validate([
+        'title'   => 'required|string|max:255',
+        'start_time'       => 'required|date|after_or_equal:now',
+        'duration_minutes' => 'required|integer|min:1',
+        'question_ids'     => 'nullable|array',
+        'question_ids.*'   => 'exists:questions,id',
+    ]);
+
+        $challenge = Challenge::create([
+        'teacher_id'       => $teacherId,
+        'title'   => $validated['title'],
+        'start_time'       => $validated['start_time'],
+        'duration_minutes' => $validated['duration_minutes'],
+    ]);
+
+   
+    if (!empty($validated['question_ids'])) {
+        $challenge->questions()->attach($validated['question_ids']);
+    }
+
+    return response()->json([
+        'message'   => 'Challenge created successfully.',
+        'challenge' => $challenge
+    ], 201);
+}
+
+//اضافة سؤال للتحدي 
+
+
+
+public function addQuestionToChallenge(Request $request, $challengeId)
+{
+    $request->validate([
+        'question_id' => 'required|exists:questions,id'
+    ]);
+
+  
+    $challenge = Challenge::find($challengeId);
+    if (!$challenge) {
+        return response()->json(['message' => 'Challenge not found'], 404);
+    }
+
+    
+    if ($challenge->teacher_id !== auth()->id()) {
+        return response()->json(['message' => 'You are not authorized to modify this challenge'], 403);
+    }
+
+    
+    if ($challenge->questions()->where('question_id', $request->question_id)->exists()) {
+        return response()->json(['message' => 'Question already exists in this challenge'], 409);
+    }
+
+   
+    $challenge->questions()->attach($request->question_id);
+
+    return response()->json([
+        'message' => 'Question added to challenge successfully',
+        'challenge' => $challenge->load('questions')
+    ]);
+}
+
+
+}
+
+
+
+
+
+

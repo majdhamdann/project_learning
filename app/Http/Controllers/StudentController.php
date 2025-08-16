@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\Test;
 use App\Models\SubjectRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +31,9 @@ class StudentController extends Controller
         'message' => 'تم إضافة الطلاب إلى المادة بنجاح'
     ]);
 }
+
+
+
 public function subscribe(Request $request)
 {
     $request->validate([
@@ -40,14 +44,14 @@ public function subscribe(Request $request)
     $student = Student::find($request->student_id);
     $subject_id = $request->subject_id;
 
-    // تحقق من وجود اشتراك سابق
+   
     if ($student->subjects()->where('subject_id', $subject_id)->exists()) {
         return response()->json([
             'message' => 'تم تقديم طلب مسبق لهذه المادة.',
-        ], 409); // 409 Conflict
+        ], 409); 
     }
 
-    // إنشاء الطلب
+  
     $student->subjects()->attach($subject_id, ['status' => 'pending']);
 
     return response()->json([
@@ -69,6 +73,7 @@ public function requestSubject(Request $request)
         'teacher_id' => 'required|exists:users,id', 
     ]);
 
+    // Check for existing pending request
     $existing = SubjectStudent::where('user_id', $user->id)
         ->where('subject_id', $request->subject_id)
         ->where('teacher_id', $request->teacher_id)
@@ -94,8 +99,10 @@ public function requestSubject(Request $request)
 
 public function getLessonsBySubject($subject_id)
 {
-    $studentId = auth()->id();
+    // استخراج هوية الطالب من المستخدم المسجل دخول
+    $studentId = auth()->id(); // تأكد أنك مفعل auth middleware في المسار
 
+    // التحقق من حالة الطالب في المادة
     $statusRecord = DB::table('subject_student')
         ->where('user_id', $studentId)
         ->where('subject_id', $subject_id)
@@ -133,6 +140,82 @@ public function getStudents()
 
     return response()->json($students);
 }
+
+
+  //عرض طلاب استاذ
+public function getStudentsForTeacherSubject()
+{
+    $teacherId =auth()->id();
+    $students = SubjectStudent::with('user')
+        ->where('teacher_id', $teacherId)
+        ->where('status', 'accepted')
+        ->get();
+
+    return response()->json([
+        'teacher_id' => $teacherId,
+        'students' => $students->map(function ($record) {
+            return [
+                'student_id' => $record->user_id,
+                'student' => $record->user, 
+            ];
+        })
+    ]);
+}
+
+//عرض الاختبارات من المفضلة 
+
+
+public function getTeacherFavoriteTests($teacherId)
+{
+    $student = auth()->user();
+
+  
+    $exists = DB::table('teacher_favorite')
+        ->where('teacher_id', $teacherId)
+        ->where('student_id', $student->id)
+        ->exists();
+
+    if (!$exists) {
+        return response()->json(['message' => 'You are not allowed to view this teacher tests.'], 403);
+    }
+
+    
+    $tests = Test::with('questions.options')
+        ->where('user_id', $teacherId)
+        ->where('is_favorite', true)
+        ->get();
+
+    return response()->json(['test '=> $tests]);
+}
+
+
+// عرض الاساتذة اللي ضافت الطالب عالمفضلة 
+
+
+public function getFavoriteTeachersForStudent()
+{
+    $studentId = auth()->id(); 
+
+    
+    $teachers = DB::table('teacher_favorite')
+        ->join('users', 'teacher_favorite.teacher_id', '=', 'users.id')
+        ->where('teacher_favorite.student_id', $studentId)
+        ->select('users.id', 'users.name', 'users.email','users.phone') 
+        ->get();
+
+    if ($teachers->isEmpty()) {
+        return response()->json([
+            'message' => 'No favorite teachers found for this student.'
+        ], 404);
+    }
+
+    return response()->json([
+        'teachers' => $teachers
+    ]);
+}
+
+
+
 
 
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Test extends Model
 {
     use HasFactory;
-    protected $fillable = ['lesson_id', 'student_id','subject_id'];
+    protected $fillable = ['lesson_id','test_name','user_id','subject_id','is_favorite'];
     public function questions()
     {
         return $this->belongsToMany(Question::class, 'test_questions')
@@ -47,4 +47,16 @@ public function subject()
 {
     return $this->belongsTo(Subject::class);
 }
+
+public function user()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+
+
+public function favoritedByTeachers()
+{
+    return $this->belongsTo(User::class, 'tests_teacher_favorite', 'test_id', 'teacher_id');
+}
+
 }
