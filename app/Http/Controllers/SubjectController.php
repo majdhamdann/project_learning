@@ -117,20 +117,30 @@ public function addStudentsToSubject(Request $request, $subjectId)
         'message' => 'تم إضافة الطلاب إلى المادة بنجاح'
     ]);
 }
-
 public function removeStudentFromSubject(Request $request, $subjectId)
 {
     $validated = $request->validate([
         'student_id' => 'required|exists:users,id',
     ]);
+
     $subject = Subject::findOrFail($subjectId);
 
-    $isEnrolled = $subject->students()->where('student_id', $validated['student_id'])->exists();
+    $isStudent = User::where('id', $validated['student_id'])->where('role_id', 1)->exists();
+    
+    if (!$isStudent) {
+        return response()->json([
+            'message' => 'المستخدم المحدد ليس طالباً.',
+        ], 404);
+    }
+
+    $isEnrolled = $subject->students()->where('user_id', $validated['student_id'])->exists();
+    
     if (!$isEnrolled) {
         return response()->json([
             'message' => 'هذا الطالب غير مسجل في هذه المادة.',
         ], 404);
     }
+
     $subject->students()->detach($validated['student_id']);
 
     return response()->json([
@@ -138,12 +148,10 @@ public function removeStudentFromSubject(Request $request, $subjectId)
     ]);
 }
 
-//عرض جميع المواد
 
 
 public function getSubjects()
 {
-    // استرجاع جميع المواد مع المعلومات المرتبطة بالأستاذ
     $subjects = Subject::all();
 
     return response()->json([

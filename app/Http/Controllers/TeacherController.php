@@ -26,7 +26,6 @@ class TeacherController extends Controller
 
 
 
-// عرض المفضلة لاستاذ
 
 public function getMyFavoriteStudents()
 {

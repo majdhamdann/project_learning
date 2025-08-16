@@ -110,6 +110,9 @@ Route::middleware(['auth:sanctum', 'teacher'])->group(function () {
 //عرض الطلاب الخاصين بالاستاذ 
 Route::get('/teacher_favorite', [TeacherController::class, 'getMyFavoriteStudents']);
 
+//عرض نتائج الاختبارات لجميع الطلاب
+Route::get('/soluation-to-student', [TestController::class, 'getStudentSolutionsBySubject']);
+
 //اضافة طالب للاستاذ
 Route::post('/add/favorite/student/{student_id}',[TeacherController::class,'addFavoriteStudent']);
 
