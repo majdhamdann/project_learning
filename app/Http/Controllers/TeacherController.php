@@ -8,6 +8,7 @@ use App\Models\Teacher;
 use App\models\Student;
 use App\Models\Subject;
 use App\Models\Test;
+use App\Models\Challenge;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\TeacherProfile;
@@ -380,7 +381,76 @@ public function getAllQuestionsByTeacher()
     return response()->json($questions);
 }
 
+//انشاء تحدي 
 
+public function createChallenge(Request $request)
+{
+    $teacherId = auth()->id();
+
+    if (!$teacherId) {
+        return response()->json(['message' => 'User not authenticated'], 401);
+    }
+
+    $validated = $request->validate([
+        'title'   => 'required|string|max:255',
+        'start_time'       => 'required|date|after_or_equal:now',
+        'duration_minutes' => 'required|integer|min:1',
+        'question_ids'     => 'nullable|array',
+        'question_ids.*'   => 'exists:questions,id',
+    ]);
+
+        $challenge = Challenge::create([
+        'teacher_id'       => $teacherId,
+        'title'   => $validated['title'],
+        'start_time'       => $validated['start_time'],
+        'duration_minutes' => $validated['duration_minutes'],
+    ]);
+
+   
+    if (!empty($validated['question_ids'])) {
+        $challenge->questions()->attach($validated['question_ids']);
+    }
+
+    return response()->json([
+        'message'   => 'Challenge created successfully.',
+        'challenge' => $challenge
+    ], 201);
+}
+
+//اضافة سؤال للتحدي 
+
+
+
+public function addQuestionToChallenge(Request $request, $challengeId)
+{
+    $request->validate([
+        'question_id' => 'required|exists:questions,id'
+    ]);
+
+  
+    $challenge = Challenge::find($challengeId);
+    if (!$challenge) {
+        return response()->json(['message' => 'Challenge not found'], 404);
+    }
+
+    
+    if ($challenge->teacher_id !== auth()->id()) {
+        return response()->json(['message' => 'You are not authorized to modify this challenge'], 403);
+    }
+
+    
+    if ($challenge->questions()->where('question_id', $request->question_id)->exists()) {
+        return response()->json(['message' => 'Question already exists in this challenge'], 409);
+    }
+
+   
+    $challenge->questions()->attach($request->question_id);
+
+    return response()->json([
+        'message' => 'Question added to challenge successfully',
+        'challenge' => $challenge->load('questions')
+    ]);
+}
 
 
 }

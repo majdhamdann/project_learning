@@ -34,4 +34,10 @@ class Question extends Model
     {
         return $this->belongsTo(Lesson::class);
     }
+    public function challenges()
+    {
+        return $this->belongsToMany(Challenge::class, 'challenge_question', 'question_id', 'challenge_id')
+                    ->withTimestamps();
+    }
+
 }

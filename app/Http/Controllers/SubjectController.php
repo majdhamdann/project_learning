@@ -62,7 +62,7 @@ class SubjectController extends Controller
             $updateData['teacher_id'] = $teacher->id;
         }
     
-        // تحديث بيانات المادة
+       
         $subject->update($updateData);
     
         return response()->json([
@@ -156,7 +156,8 @@ public function getSubjects()
 public function getTeachersForSubject($subjectId)
 {
     $subject = Subject::with(['teachers' => function ($query) {
-        $query->where('role_id', 2); 
+        $query->where('role_id', 2)
+              ->wherePivot('status', 'accepted'); 
     }])->findOrFail($subjectId);
 
     $teachers = $subject->teachers->map(function ($teacher) {
@@ -164,12 +165,13 @@ public function getTeachersForSubject($subjectId)
             'id' => $teacher->id,
             'name' => $teacher->name,
             'email' => $teacher->email,
-           
+            
         ];
     });
 
     return response()->json($teachers);
 }
+
 
 
 

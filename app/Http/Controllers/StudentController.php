@@ -190,6 +190,30 @@ public function getTeacherFavoriteTests($teacherId)
 }
 
 
+// عرض الاساتذة اللي ضافت الطالب عالمفضلة 
+
+
+public function getFavoriteTeachersForStudent()
+{
+    $studentId = auth()->id(); 
+
+    
+    $teachers = DB::table('teacher_favorite')
+        ->join('users', 'teacher_favorite.teacher_id', '=', 'users.id')
+        ->where('teacher_favorite.student_id', $studentId)
+        ->select('users.id', 'users.name', 'users.email','users.phone') 
+        ->get();
+
+    if ($teachers->isEmpty()) {
+        return response()->json([
+            'message' => 'No favorite teachers found for this student.'
+        ], 404);
+    }
+
+    return response()->json([
+        'teachers' => $teachers
+    ]);
+}
 
 
 

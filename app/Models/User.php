@@ -103,5 +103,10 @@ public function favoriteTests()
 }
 
 
+public function challenges()
+{
+    return $this->hasMany(Challenge::class, 'teacher_id');
+}
+
 
 }

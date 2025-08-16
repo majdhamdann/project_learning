@@ -158,6 +158,13 @@ Route::get('/get/request/teacher/subject',[TeacherController::class,'getTeacherR
 //عرض كامل اسئلة الاستاذ 
 Route::get('/get/all/questions/by/teacher',[TeacherController::class,'getAllQuestionsByTeacher']);
 
+//انشاء تحدي 
+Route::post('/create/challenge',[TeacherController::class,'createChallenge']);
+
+//اضافة سؤال للتحدي 
+Route::post('/add/question/challenge/{challenge_id}',[TeacherController::class,'addQuestionToChallenge']);
+
+
  });
 
 
@@ -170,7 +177,8 @@ Route::middleware(['auth:sanctum', 'student'])->group(function () {
 //عرض الاختبارات من المفضلة 
 Route::get('/get/tests/from/favorite/{teacher_id}',[StudentController::class,'getTeacherFavoriteTests']);
 
-
+//عرض الاساتذة اللي ضافو الطالب عالمفضلة 
+Route::get('/get/teachers/favorite/student',[StudentController::class,'getFavoriteTeachersForStudent']);
 
 
 
