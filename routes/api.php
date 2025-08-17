@@ -300,6 +300,12 @@ Route::get('/get/question/lesson/favorite/with/options/{teacher_id}',[QuestionCo
 
 Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
 
+//عرض تحدي 
+Route::get('/get/challenge/{challenge_id}',[StudentController::class,'getChallengeQuestions']);
+
+//عرض تحديات استاذ 
+Route::get('/get/challenge/teacher/{teacher_id}',[StudentController::class,'getChallengesForTeacher']);
+
 
 });
 

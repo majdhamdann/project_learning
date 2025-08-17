@@ -72,13 +72,4 @@ class Kernel extends HttpKernel
 
 
 
-    protected function schedule(Schedule $schedule)
-{
-    $schedule->call(function () {
-        $now = now();
-        \App\Models\Challenge::where('start_time', '<=', $now)
-            ->whereRaw("DATE_ADD(start_time, INTERVAL duration MINUTE) <= ?", [$now])
-            ->delete();
-    })->everyMinute();
-}
 }

@@ -1,17 +1,21 @@
 <?php
 
 namespace App\Http\Controllers;
+use Carbon\Carbon;
 
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\Test;
+use App\Models\Challenge;
 use App\Models\SubjectRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SubjectStudent;
 use Illuminate\Support\Facades\DB;
 use App\Models\Lesson;
+
+
 
 
 class StudentController extends Controller
@@ -215,6 +219,64 @@ public function getFavoriteTeachersForStudent()
     ]);
 }
 
+
+//عرض التحدي 
+
+
+public function getChallengeQuestions($challengeId)
+{
+    $user = auth()->user();
+
+   
+    $challenge = Challenge::with('questions.options')->find($challengeId);
+
+    if (!$challenge) {
+        return response()->json(['message' => 'Challenge not found or already expired.'], 404);
+    }
+
+    $now = Carbon::now();
+
+   
+    if ($now->lt(Carbon::parse($challenge->start_time))) {
+        return response()->json(['message' => 'Challenge has not started yet.'], 403);
+    }
+
+   
+    if ($user->id === $challenge->teacher_id) {
+        return response()->json($challenge->questions);
+    }
+
+   
+    $relation = SubjectStudent::where('user_id', $user->id)
+        ->where('teacher_id', $challenge->teacher_id)
+        ->where('status', 'accepted')
+        ->first();
+
+    if (!$relation) {
+        return response()->json(['message' => 'You are not authorized to view this challenge.'], 403);
+    }
+
+    return response()->json($challenge->questions);
+}
+
+
+//عرض تحديات استاذ 
+
+public function getChallengesForTeacher($teacherId)
+{
+    $teacher = User::find($teacherId);
+
+   
+
+    
+    $challenges = Challenge::where('teacher_id', $teacherId)->get();
+
+    if ($challenges->isEmpty()) {
+        return response()->json(['message' => 'No challenges found for this teacher.'], 404);
+    }
+
+    return response()->json($challenges);
+}
 
 
 
