@@ -78,7 +78,7 @@ public function requestSubject(Request $request)
         'teacher_id' => 'required|exists:users,id', 
     ]);
 
-    
+    // Check for existing pending request
     $existing = SubjectStudent::where('user_id', $user->id)
         ->where('subject_id', $request->subject_id)
         ->where('teacher_id', $request->teacher_id)
@@ -100,15 +100,14 @@ public function requestSubject(Request $request)
 }
 
 
-//عرض دروس مادة 
 
 
 public function getLessonsBySubject($subject_id)
 {
-    
-    $studentId = auth()->id(); 
+    // استخراج هوية الطالب من المستخدم المسجل دخول
+    $studentId = auth()->id(); // تأكد أنك مفعل auth middleware في المسار
 
-    
+    // التحقق من حالة الطالب في المادة
     $statusRecord = DB::table('subject_student')
         ->where('user_id', $studentId)
         ->where('subject_id', $subject_id)

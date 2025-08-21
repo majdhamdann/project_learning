@@ -24,6 +24,17 @@ class Subject extends Model
     {
         return $this->hasMany(Test::class);
     }
+//    public function students()
+// {
+//     return $this->belongsToMany(User::class, 'student_subject', 'subject_id', 'student_id');
+// }
+public function students()
+{
+    return $this->belongsToMany(User::class, 'subject_student', 'subject_id', 'user_id')
+                ->withPivot(['status', 'teacher_id'])
+                ->withTimestamps();
+}
+
     //public function teacher()
     //{
       //  return $this->hasOne(User::class);

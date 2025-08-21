@@ -121,6 +121,8 @@ public function createTest(Request $request)
 
   
     $test->lessons()->attach($validated['lesson_ids']);
+
+    // ربط الأسئلة بالاختبار
     foreach ($questions as $question) {
         $test->questions()->attach($question->id);
         foreach ($question->subQuestions as $subQuestion) {
@@ -320,7 +322,7 @@ public function createTestWithQuestions(Request $request)
     }
     
     public function submitAnswers(Request $request, $testId)
-    {
+    { 
         $validated = $request->validate([
             'answers' => 'required|array',
         ]);
@@ -394,7 +396,152 @@ public function createTestWithQuestions(Request $request)
     
     
 
-    public function startTest($test_id)
+// public function getStudentSolutionsBySubject($subjectId)
+// {
+//     $teacher = auth()->user();
+    
+
+//     return TestQuestion::with([
+//             'question',
+//             'selectedOption',
+//             'correctOption',
+//             'test' => function($query) use ($subjectId) {
+//                 $query->where('subject_id', $subjectId)
+//                       ->with('lessons'); 
+//             },
+//             'test.student',
+//             'test.lessons' 
+//         ])
+//         ->whereHas('test', function($query) use ($subjectId, $teacher) {
+//             $query->where('subject_id', $subjectId)
+//                   ->whereHas('subjectStudents', function($q) use ($teacher) {
+//                       $q->where('teacher_id', $teacher->id)
+//                         ->where('status', 'accepted');
+//                   })
+//                   ->whereHas('teacherSubject', function($q) use ($teacher, $subjectId) {
+//                       $q->where('teacher_id', $teacher->id)
+//                         ->where('subject_id', $subjectId)
+//                         ->where('status', 'accepted');
+//                   });
+//         })
+//         ->get()
+//         ->groupBy('test.student.name')
+//         ->map(function($solutions, $studentName) {
+//             $firstSolution = $solutions->first();
+            
+//             return [
+//                 'student_name' => $studentName,
+//                 'student_id' => $firstSolution->test->student_id,
+//                 'lessons' => $firstSolution->test->lessons->pluck('name')->implode(', '),
+//                 'solutions' => $solutions->map(function($item) {
+//                     return [
+//                         'question_id' => $item->question_id,
+//                         'question_text' => $item->question->question_text,
+//                         'student_answer' => $item->selectedOption ? $item->selectedOption->option_text : null,
+//                         'correct_answer' => $item->correctOption ? $item->correctOption->option_text : null,
+//                         'is_correct' => $item->is_correct,
+//                         'test_id' => $item->test_id,
+//                         'test_date' => $item->test->created_at->format('Y-m-d H:i'),
+//                         'lesson_names' => $item->test->lessons->pluck('name')->implode(', ')
+//                     ];
+//                 })
+//             ];
+//         });
+// }
+
+// public function submitLessonAnswers(Request $request, $lessonId)
+// {
+//     $request->validate([
+//         'answers' => 'required|array',
+//         'answers.*' => 'exists:options,id'
+//     ]);
+
+//     if (auth()->user()->role != 'student') {
+//         abort(403, 'غير مصرح للطلاب فقط');
+//     }
+
+//     $studentId = auth()->id();
+//     $answers = $request->answers;
+//     $lesson = Lesson::with('questions.options')->findOrFail($lessonId);
+
+//     DB::beginTransaction();
+
+//     try {
+//         $test = Test::create([
+//             'student_id' => $studentId,
+//             'subject_id' => $lesson->subject_id,
+//             'type' => 'lesson',
+//             'status' => 'completed'
+//         ]);
+
+//         $test->lessons()->attach($lessonId);
+
+//         $correctAnswersCount = 0;
+
+//         foreach ($answers as $questionId => $selectedOptionId) {
+//             $question = $lesson->questions->find($questionId);
+            
+//             if (!$question) {
+//                 continue; 
+//             }
+
+//             $isCorrect = $question->options()
+//                                 ->where('id', $selectedOptionId)
+//                                 ->where('is_correct', true)
+//                                 ->exists();
+
+//             if ($isCorrect) {
+//                 $correctAnswersCount++;
+//             }
+
+//             TestQuestion::create([
+//                 'test_id' => $test->id,
+//                 'question_id' => $questionId,
+//                 'selected_option_id' => $selectedOptionId,
+//                 'is_correct' => $isCorrect
+//             ]);
+//         }
+
+//         $totalQuestions = $lesson->questions->count();
+//         $scorePercentage = $totalQuestions > 0 
+//             ? round(($correctAnswersCount / $totalQuestions) * 100, 2)
+//             : 0;
+
+//         DB::table('test_reports')::create([
+//             'test_id' => $test->id,
+//             'student_id' => $studentId,
+//             'correct_answers_count' => $correctAnswersCount,
+//             'incorrect_answers_count' => $totalQuestions - $correctAnswersCount,
+//             'score_percentage' => $scorePercentage
+//         ]);
+
+//         DB::commit();
+
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'تم تسجيل الإجابات بنجاح',
+//             'data' => [
+//                 'test_id' => $test->id,
+//                 'total_questions' => $totalQuestions,
+//                 'correct_answers' => $correctAnswersCount,
+//                 'score_percentage' => $scorePercentage,
+//                 'lesson_id' => $lessonId,
+//                 'lesson_name' => $lesson->name,
+//                 'subject_name' => $lesson->subject->name
+//             ]
+//         ]);
+
+//     } catch (\Exception $e) {
+//         DB::rollBack();
+        
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'حدث خطأ أثناء حفظ الإجابات',
+//             'error' => $e->getMessage()
+//         ], 500);
+//     }
+// }
+public function startTest($test_id)
 {
     $test = Test::with('questions.options')->findOrFail($test_id);
 

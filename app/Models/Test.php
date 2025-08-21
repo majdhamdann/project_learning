@@ -39,7 +39,10 @@ class Test extends Model
         return $this->belongsToMany(Lesson::class);
     }
     
-
+public function subjectStudents()
+{
+    return $this->hasMany(SubjectStudent::class, 'subject_id', 'subject_id');
+}
 public function subject()
 {
     return $this->belongsTo(Subject::class);

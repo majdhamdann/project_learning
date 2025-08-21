@@ -47,7 +47,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Test::class, 'teacher_id');
     }
-
+     public function isStudent()
+{
+    return $this->role_id == 1; 
+}
     public function takenTests()
     {
         return $this->hasMany(Test::class, 'student_id');
