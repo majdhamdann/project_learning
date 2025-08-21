@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Teacher;
 use App\models\Student;
 use App\Models\Subject;
+use App\Models\Point;
 use App\Models\Test;
 use App\Models\Challenge;
 use Illuminate\Support\Facades\Auth;
@@ -452,6 +453,56 @@ public function addQuestionToChallenge(Request $request, $challengeId)
     ]);
 }
 
+
+//عرض تحديات استاذ
+
+public function getChallengesForTeacher()
+{
+    $teacherId = auth()->id();
+
+    if (!$teacherId) {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
+
+    
+    $challenges = Challenge::where('teacher_id', $teacherId)->get();
+
+    if ($challenges->isEmpty()) {
+        return response()->json(['message' => 'No challenges found for this teacher.'], 404);
+    }
+
+    return response()->json($challenges);
+}
+
+
+
+//عرض نقاط الطلاب 
+
+
+
+public function getStudentPoints()
+{
+   
+    $teacherId = Auth::id(); 
+
+    
+    $pointsRecords = Point::where('teacher_id', $teacherId)
+                           ->with('student') 
+                           ->get();
+
+    
+    if ($pointsRecords->isEmpty()) {
+        return response()->json([
+            'message' => 'No points registered for this teacher.'
+        ], 404);
+    }
+
+    
+    return response()->json([
+        'teacher_id' => $teacherId,
+        'students_points' => $pointsRecords
+    ]);
+}
 
 }
 

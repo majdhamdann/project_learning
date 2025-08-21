@@ -15,9 +15,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('challenges:delete-expired')->everyMinute();
+        $schedule->command('challenges:assign-points')->everyMinute(); 
 
-
+    // ثم حذف التحديات المنتهية
+    $schedule->command('challenges:delete-expired')->everyMinute();
         // $schedule->command('inspire')->hourly();
     }
 

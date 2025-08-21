@@ -12,18 +12,17 @@ class DeleteExpiredChallenges extends Command
     protected $description = 'Delete challenges that have expired based on start_time and duration';
 
     public function handle()
-{
-    $now = now();
+    {
+        $now = now();
 
-    
-    $challenges = Challenge::whereRaw('DATE_ADD(start_time, INTERVAL duration_minutes MINUTE) <= ?', [$now])
-        ->get();
+        // استرجاع كل التحديات المنتهية
+        $challenges = Challenge::whereRaw('DATE_ADD(start_time, INTERVAL duration_minutes MINUTE) <= ?', [$now])
+            ->get();
 
-    foreach ($challenges as $challenge) {
-        $challenge->delete();
+        foreach ($challenges as $challenge) {
+            $challenge->delete();
+        }
+
+        $this->info('Expired challenges deleted successfully.');
     }
-
-    $this->info('Expired challenges deleted successfully.');
-}
-
 }
