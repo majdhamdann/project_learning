@@ -1,17 +1,22 @@
 <?php
 
 namespace App\Http\Controllers;
+use Carbon\Carbon;
 
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
 use App\Models\Test;
+use App\Models\Challenge;
 use App\Models\SubjectRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SubjectStudent;
 use Illuminate\Support\Facades\DB;
 use App\Models\Lesson;
+use App\Models\Point;
+
+
 
 use App\Notifications\NewSubscriptionRequestNotification;
 
@@ -223,7 +228,160 @@ public function getFavoriteTeachersForStudent()
 }
 
 
+//عرض التحدي 
 
+
+public function getChallengeQuestions($challengeId)
+{
+    $user = auth()->user();
+
+   
+    $challenge = Challenge::with('questions.options')->find($challengeId);
+
+    if (!$challenge) {
+        return response()->json(['message' => 'Challenge not found or already expired.'], 404);
+    }
+
+    $now = Carbon::now();
+
+   
+    if ($now->lt(Carbon::parse($challenge->start_time))) {
+        return response()->json(['message' => 'Challenge has not started yet.'], 403);
+    }
+
+   
+    if ($user->id === $challenge->teacher_id) {
+        return response()->json($challenge->questions);
+    }
+
+   
+    $relation = SubjectStudent::where('user_id', $user->id)
+        ->where('teacher_id', $challenge->teacher_id)
+        ->where('status', 'accepted')
+        ->first();
+
+    if (!$relation) {
+        return response()->json(['message' => 'You are not authorized to view this challenge.'], 403);
+    }
+
+    return response()->json($challenge->questions);
+}
+
+
+//عرض تحديات طالب
+
+public function getChallengesForstudent()
+{
+    $studentId = auth()->id();
+
+    if (!$studentId) {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
+
+    
+    $acceptedTeachers = DB::table('subject_student')
+        ->where('user_id', $studentId)
+        ->where('status', 'accepted')
+        ->pluck('teacher_id');
+
+    if ($acceptedTeachers->isEmpty()) {
+        return response()->json(['message' => 'No accepted teachers found for this student.'], 404);
+    }
+
+    
+    $challenges = Challenge::whereIn('teacher_id', $acceptedTeachers)->get();
+
+    if ($challenges->isEmpty()) {
+        return response()->json(['message' => 'No challenges found for accepted teachers.'], 404);
+    }
+
+    return response()->json($challenges);
+}
+
+
+
+// الاجابة على التحدي 
+
+public function submitChallengeAnswers(Request $request, $challengeId)
+{
+    $validated = $request->validate([
+        'answers' => 'required|array',
+    ]);
+
+    $challenge = Challenge::with('questions.options')->findOrFail($challengeId);
+
+   
+    $allChallengeQuestions = $challenge->questions;
+    $allQuestionIds = $allChallengeQuestions->pluck('id')->toArray();
+
+    $submittedAnswers = $validated['answers'];
+
+    
+    foreach (array_keys($submittedAnswers) as $submittedQuestionId) {
+        if (!in_array($submittedQuestionId, $allQuestionIds)) {
+            return response()->json([
+                'message' => "Question ID $submittedQuestionId does not belong to this challenge."
+            ], 400);
+        }
+    }
+
+    $correctAnswersCount = 0;
+    $incorrectAnswersCount = 0;
+
+    foreach ($submittedAnswers as $questionId => $selectedOptionId) {
+        $question = $allChallengeQuestions->find($questionId);
+
+        if ($question) {
+            $isCorrect = $question->options()
+                ->where('id', $selectedOptionId)
+                ->value('is_correct');
+
+            if ($isCorrect) {
+                $correctAnswersCount++;
+            } else {
+                $incorrectAnswersCount++;
+            }
+        }
+    }
+
+    
+    $challenge->reports()->create([
+        'student_id' => Auth::id(),
+        'correct_answers_count' => $correctAnswersCount,
+        'incorrect_answers_count' => $incorrectAnswersCount,
+    ]);
+
+    return response()->json([
+        'correct_answers_count' => $correctAnswersCount,
+        'incorrect_answers_count' => $incorrectAnswersCount,
+    ]);
+}
+//عرض نقاط الطالب 
+
+
+public function getStudentPointsByTeacher()
+{
+    // الحصول على student_id من التوكين الحالي (المستخدم الذي تم تسجيل دخوله)
+    $studentId = Auth::id(); // إذا كنت تستخدم التوكين الخاص بالمستخدم
+
+    // استعلام لاسترجاع نقاط الطالب عند كل أستاذ
+    $pointsRecords = Point::where('student_id', $studentId)
+                           ->with('teacher') // إذا كنت تريد إظهار بيانات الأساتذة المرتبطة بالنقاط
+                           ->get();
+
+    // تحقق إذا كانت هناك نقاط مسجلة للطالب
+    if ($pointsRecords->isEmpty()) {
+        return response()->json([
+            'message' => 'No points registered for this student.'
+        ], 404);
+    }
+
+    // إرجاع النقاط مع أسماء الأساتذة
+    return response()->json([
+        'student_id' => $studentId,
+        'points_by_teachers' => $pointsRecords
+    ]);
+}
 
 
 }

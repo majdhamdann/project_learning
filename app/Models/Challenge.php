@@ -34,6 +34,13 @@ class Challenge extends Model
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
+
     }
+
+    public function reports()
+{
+    return $this->hasMany(ChallengeReport::class, 'challenge_id');
+}
+
 
 }

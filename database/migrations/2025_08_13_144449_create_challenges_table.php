@@ -15,23 +15,23 @@ return new class extends Migration
     {
         Schema::create('challenges', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('teacher_id');
+        $table->foreignId('teacher_id')->references('id')->on('users')->onDelete('cascade');;
         $table->string('title');
+        $table->boolean('points_transferred')->default(false);
         $table->timestamp('start_time');
         $table->integer('duration_minutes');
         $table->timestamps();
 
-        $table->foreign('teacher_id')->references('id')->on('users')->onDelete('cascade');
+       
     });
 
     Schema::create('challenge_question', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('challenge_id');
-        $table->unsignedBigInteger('question_id');
+        
         $table->timestamps();
 
-        $table->foreign('challenge_id')->references('id')->on('challenges')->onDelete('cascade');
-        $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
+        $table->foreignId('challenge_id')->references('id')->on('challenges')->onDelete('cascade');
+        $table->foreignId('question_id')->references('id')->on('questions')->onDelete('cascade');
     });
     }
 

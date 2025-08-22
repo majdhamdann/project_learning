@@ -112,4 +112,20 @@ public function challenges()
 }
 
 
+public function challengeReports()
+{
+    return $this->hasMany(ChallengeReport::class, 'student_id');
+}
+
+
+public function pointsGiven()
+{
+    return $this->hasMany(Point::class, 'teacher_id');
+}
+public function pointsReceived()
+{
+    return $this->hasMany(Point::class, 'student_id');
+}
+
+
 }

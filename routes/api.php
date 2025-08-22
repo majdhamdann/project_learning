@@ -167,6 +167,11 @@ Route::post('/create/challenge',[TeacherController::class,'createChallenge']);
 //اضافة سؤال للتحدي 
 Route::post('/add/question/challenge/{challenge_id}',[TeacherController::class,'addQuestionToChallenge']);
 
+//عرض تحديات الاستاذ 
+Route::get('/get/challenges/teacher',[TeacherController::class,'getChallengesForTeacher']);
+
+//عرض نقاط الطلاب عند الاستاذ
+Route::get('/get/points/students/teacher',[TeacherController::class,'getStudentPoints']);
 
  });
 
@@ -183,7 +188,8 @@ Route::get('/get/tests/from/favorite/{teacher_id}',[StudentController::class,'ge
 //عرض الاساتذة اللي ضافو الطالب عالمفضلة 
 Route::get('/get/teachers/favorite/student',[StudentController::class,'getFavoriteTeachersForStudent']);
 
-
+//عرض نقاط طالب 
+Route::get('/get/points/student',[StudentController::class,'getStudentPointsByTeacher']);
 
 
 });
@@ -303,8 +309,17 @@ Route::get('/get/question/lesson/favorite/with/options/{teacher_id}',[QuestionCo
 
 Route::post('/get/lessons/teacher/{teacher_id}',[LessonController::class,'getLessonsForTeacherSubject']);
 
+//عرض تحدي 
+Route::get('/get/challenge/{challenge_id}',[StudentController::class,'getChallengeQuestions']);
 
-});
+//عرض تحديات طالب
+Route::get('/get/challenges/student',[StudentController::class,'getChallengesForstudent']);
+
+//الاجابة على التحدي 
+Route::post('/submit/challenge/{challenge_id}',[StudentController::class,'submitChallengeAnswers']);
+
+
+}); 
 
 
 //               //                    قسم الادمن 
