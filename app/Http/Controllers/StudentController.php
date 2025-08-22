@@ -13,6 +13,7 @@ use App\Models\SubjectStudent;
 use Illuminate\Support\Facades\DB;
 use App\Models\Lesson;
 
+use App\Notifications\NewSubscriptionRequestNotification;
 
 class StudentController extends Controller
 {
@@ -84,12 +85,19 @@ public function requestSubject(Request $request)
         return response()->json(['message' => 'You have already submitted a request for this subject with this teacher.'], 400);
     }
 
-    SubjectStudent::create([
+    $subjectStudent =SubjectStudent::create([
         'user_id' => $user->id,
         'subject_id' => $request->subject_id,
         'teacher_id' => $request->teacher_id,
         'status' => 'pending',
     ]);
+    $teacher = $subjectStudent->teacher; // يجب أن تكون لديك علاقة teacher() في موديل SubjectStudent
+    if ($teacher) {
+        $teacher->notify(new NewSubscriptionRequestNotification(
+            $user->name,                     // اسم الطالب
+            $subjectStudent->subject->name   // اسم المادة
+        ));
+    }
 
     return response()->json(['message' => 'Request submitted successfully and is pending approval.']);
 }

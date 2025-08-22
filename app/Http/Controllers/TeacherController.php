@@ -17,6 +17,7 @@ use App\Models\Lesson;
 use App\Models\TeacherSubject;
 use Illuminate\Support\Facades\DB;
 
+use App\Notifications\TeacherSubscriptionRequestNotification;
 
 
 class TeacherController extends Controller
@@ -214,6 +215,13 @@ public function requestToJoinSubject(Request $request)
     }
 
     $subject = Subject::findOrFail($validated['subject_id']);
+     $admin = User::where('role_id', 3)->get();
+
+    
+     $admin->notify(new TeacherSubscriptionRequestNotification(
+            $teacher->name,
+            $subject->name
+        ));
 
     
     if (
@@ -229,6 +237,7 @@ public function requestToJoinSubject(Request $request)
         'status' => 'pending',
         
     ]);
+
 
     return response()->json([
         'message' => 'Subscription request has been sent successfully',

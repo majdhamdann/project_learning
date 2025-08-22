@@ -152,7 +152,7 @@ Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController:
 
  
 //طلب الانضمام لمادة 
-
+//اشعار للادمن
 Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
 
 //عرض حالة الطلب للانضمام لمادة 
