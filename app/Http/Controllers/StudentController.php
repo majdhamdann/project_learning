@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Subject;
 use App\Models\Student;
 use App\Models\User;
+use App\Models\TeacherRating;
 use App\Models\Test;
 use App\Models\Challenge;
 use App\Models\SubjectRequest;
@@ -227,11 +228,15 @@ public function getChallengeQuestions($challengeId)
 {
     $user = auth()->user();
 
-   
     $challenge = Challenge::with('questions.options')->find($challengeId);
 
     if (!$challenge) {
         return response()->json(['message' => 'Challenge not found or already expired.'], 404);
+    }
+
+    
+    if ($user->id === $challenge->teacher_id) {
+        return response()->json($challenge->questions);
     }
 
     $now = Carbon::now();
@@ -239,11 +244,6 @@ public function getChallengeQuestions($challengeId)
    
     if ($now->lt(Carbon::parse($challenge->start_time))) {
         return response()->json(['message' => 'Challenge has not started yet.'], 403);
-    }
-
-   
-    if ($user->id === $challenge->teacher_id) {
-        return response()->json($challenge->questions);
     }
 
    
@@ -258,6 +258,7 @@ public function getChallengeQuestions($challengeId)
 
     return response()->json($challenge->questions);
 }
+
 
 
 //عرض تحديات طالب
@@ -348,32 +349,80 @@ public function submitChallengeAnswers(Request $request, $challengeId)
         'incorrect_answers_count' => $incorrectAnswersCount,
     ]);
 }
+
+
 //عرض نقاط الطالب 
 
 
 public function getStudentPointsByTeacher()
 {
-    // الحصول على student_id من التوكين الحالي (المستخدم الذي تم تسجيل دخوله)
-    $studentId = Auth::id(); // إذا كنت تستخدم التوكين الخاص بالمستخدم
+    
+    $studentId = Auth::id(); 
 
-    // استعلام لاسترجاع نقاط الطالب عند كل أستاذ
+  
     $pointsRecords = Point::where('student_id', $studentId)
-                           ->with('teacher') // إذا كنت تريد إظهار بيانات الأساتذة المرتبطة بالنقاط
+                           ->with('teacher')
                            ->get();
 
-    // تحقق إذا كانت هناك نقاط مسجلة للطالب
+ 
     if ($pointsRecords->isEmpty()) {
         return response()->json([
             'message' => 'No points registered for this student.'
         ], 404);
     }
 
-    // إرجاع النقاط مع أسماء الأساتذة
+    
     return response()->json([
         'student_id' => $studentId,
         'points_by_teachers' => $pointsRecords
     ]);
 }
 
+
+//اضافة تقييم لاستاذ 
+
+
+
+public function rateTeacher(Request $request, $teacherId)
+{
+    $student = auth()->user();
+
+   
+    $request->validate([
+        'rating' => 'required|integer|min:1|max:5',
+    ]);
+
+   
+    $rating = TeacherRating::updateOrCreate(
+        [
+            'student_id' => $student->id,
+            'teacher_id' => $teacherId,
+        ],
+        [
+            'rating' => $request->rating,
+        ]
+    );
+
+    return response()->json([
+        'message' => 'Rating saved successfully.',
+        'data'    => $rating,
+    ], 200);
+}
+
+
+
+//عرض مواد الطالب 
+
+public function getAcceptedSubjects()
+{
+    $student = auth()->user();
+
+    $subjects = SubjectStudent::with(['subject.teacher'])
+        ->where('user_id', $student->id)
+        ->where('status', 'accepted')
+        ->get();
+
+    return response()->json($subjects);
+}
 
 }
