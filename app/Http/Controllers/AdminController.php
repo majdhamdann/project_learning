@@ -332,6 +332,17 @@ public function getTeacherSubjects($teacherId)
      ]);
  }
  
+// عرض تقييمات الاساتذة 
 
+
+public function getTeachersRatings()
+{
+    $teachers = User::where('role_id', '2') 
+        ->withCount('ratings') 
+        ->withAvg('ratings', 'rating') 
+        ->get();
+
+    return response()->json($teachers);
+}
 
 }

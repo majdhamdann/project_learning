@@ -192,6 +192,11 @@ Route::get('/get/teachers/favorite/student',[StudentController::class,'getFavori
 //عرض نقاط طالب 
 Route::get('/get/points/student',[StudentController::class,'getStudentPointsByTeacher']);
 
+//اضافة تقييم للاستاذ 
+Route::post('/add/rating/{teacher_id}',[StudentController::class,'rateTeacher']);
+
+//عرض مواد الطالب 
+Route::get('/get/subjects/student',[StudentController::class,'getAcceptedSubjects']);
 
 });
 
@@ -371,6 +376,9 @@ Route::get('get/subjects/teacher/{teacherId}', [AdminController::class, 'getTeac
  
 //عرض كامل معومات الاستاذ 
 Route::get('/get/all/profile/teacher/{teacher_id}',[AdminController::class,'getTeacherDetails']);
+
+//عرض تقييمات الاساتذة 
+Route::get('/get/ratings',[AdminController::class,'getTeachersRatings']);
 
 
        });

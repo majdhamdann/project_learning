@@ -127,4 +127,20 @@ public function pointsReceived()
     return $this->hasMany(Point::class, 'student_id');
 }
 
+
+
+
+public function givenRatings()
+{
+    return $this->hasMany(TeacherRating::class, 'student_id');
+}
+
+
+public function ratings()
+{
+    return $this->hasMany(TeacherRating::class, 'teacher_id');
+}
+
+
+
 }
