@@ -153,6 +153,7 @@ Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController:
  
 //طلب الانضمام لمادة 
 //اشعار للادمن
+//request_teacher_join_subject
 Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
 
 //عرض حالة الطلب للانضمام لمادة 
@@ -342,6 +343,7 @@ Route::middleware(['auth:sanctum','admin'])->group(function (){
  Route::get('/get/register/requests',[AdminController::class,'registerRequests']);
 
 //قبول ورفض حالات انشاء حساب 
+//////////////////////////////////////////////
 Route::post('response/register/{request_id}',[AdminController::class,'updateRequestStatus']);
 
 //اضافة استاذ
@@ -353,6 +355,8 @@ Route::get('/get/users',[AdminController::class,'getUsers']);
 //عرض طلبات الاساتذة للانضمام لمادة 
 Route::get('/get/request/join/subject',[AdminController::class,'getPendingTeacherSubjectRequests']);
 
+
+///////////////////////////////
 //قبول ورفض طلبات الاساتذة 
 Route::post('/response/teacher/join/subject/{request_id}',[AdminController::class,'handleTeacherSubjectRequest']);
 
@@ -370,3 +374,11 @@ Route::get('/get/all/profile/teacher/{teacher_id}',[AdminController::class,'getT
 
 
        });
+   Route::middleware('auth:sanctum')->get('/notifications', function() {
+    $user = auth()->user();
+    return response()->json([
+        'notifications' => $user->notifications,
+        'unread' => $user->unreadNotifications,
+    ]);
+
+});

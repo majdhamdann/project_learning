@@ -127,5 +127,4 @@ public function pointsReceived()
     return $this->hasMany(Point::class, 'student_id');
 }
 
-
 }

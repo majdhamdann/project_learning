@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\TeacherSubject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\TeacherAcceptedStudentRequestNotification;
 
 class SubjectController extends Controller
 {
@@ -111,8 +112,20 @@ public function addStudentsToSubject(Request $request, $subjectId)
     ]);
     
     $subject = Subject::findOrFail($subjectId);
-    $subject->students()->syncWithoutDetaching($validated['student_ids']);
+    //$subject->students()->syncWithoutDetaching($validated['student_ids']);
+    $subject->students()->syncWithoutDetaching(
+    collect($validated['student_ids'])->mapWithKeys(function ($studentId) {
+        return [$studentId => ['teacher_id' => auth()->id()]]; // أو المعلم المناسب
+    })->toArray()
+);
 
+    $students = User::whereIn('id', $validated['student_ids'])->get();
+    foreach ($students as $student) {
+        $student->notify(new TeacherAcceptedStudentRequestNotification(
+            auth()->user()->name, // اسم المعلم
+            $subject->title       // اسم المادة
+        ));
+    }
     return response()->json([
         'message' => 'تم إضافة الطلاب إلى المادة بنجاح'
     ]);

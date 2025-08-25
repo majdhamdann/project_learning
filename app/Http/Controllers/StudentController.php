@@ -15,10 +15,10 @@ use App\Models\SubjectStudent;
 use Illuminate\Support\Facades\DB;
 use App\Models\Lesson;
 use App\Models\Point;
+use App\Notifications\StudentSubjectRequestNotification;
 
 
 
-use App\Notifications\NewSubscriptionRequestNotification;
 
 class StudentController extends Controller
 {
@@ -65,7 +65,6 @@ public function subscribe(Request $request)
     ], 200);
 }
 
-
 public function requestSubject(Request $request)
 {
     $user = auth()->user();
@@ -96,13 +95,12 @@ public function requestSubject(Request $request)
         'teacher_id' => $request->teacher_id,
         'status' => 'pending',
     ]);
-    $teacher = $subjectStudent->teacher; // يجب أن تكون لديك علاقة teacher() في موديل SubjectStudent
-    if ($teacher) {
-        $teacher->notify(new NewSubscriptionRequestNotification(
-            $user->name,                     // اسم الطالب
-            $subjectStudent->subject->name   // اسم المادة
-        ));
-    }
+    $teacher = User::find($request->teacher_id);
+    $teacher->notify(new StudentSubjectRequestNotification(
+        $user->name,              
+        $subjectStudent->subject->title
+    ));
+    
 
     return response()->json(['message' => 'Request submitted successfully and is pending approval.']);
 }

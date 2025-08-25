@@ -5,7 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class TeacherSubscriptionRequestNotification extends Notification
+class TeacherAcceptedStudentRequestNotification extends Notification
 {
     use Queueable;
 
@@ -28,7 +28,7 @@ class TeacherSubscriptionRequestNotification extends Notification
         return [
             'teacher_name' => $this->teacherName,
             'subject_name' => $this->subjectName,
-            'message' => "المعلم {$this->teacherName} طلب الانضمام لمادة {$this->subjectName}"
+            'message' => "المعلم {$this->teacherName} وافق على طلبك للاشتراك في مادة {$this->subjectName}",
         ];
     }
 }

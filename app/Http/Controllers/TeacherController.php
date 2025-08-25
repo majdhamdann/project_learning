@@ -19,6 +19,7 @@ use App\Models\TeacherSubject;
 use Illuminate\Support\Facades\DB;
 
 use App\Notifications\TeacherSubscriptionRequestNotification;
+use App\Notifications\NewChallengeNotification ;
 
 
 class TeacherController extends Controller
@@ -202,6 +203,7 @@ public function removeFavoriteStudent($studentId)
 
 //تقديم طلب الانضمام لمادة 
 
+
 public function requestToJoinSubject(Request $request)
 {
     $validated = $request->validate([
@@ -216,15 +218,6 @@ public function requestToJoinSubject(Request $request)
     }
 
     $subject = Subject::findOrFail($validated['subject_id']);
-     $admin = User::where('role_id', 3)->get();
-
-    
-     $admin->notify(new TeacherSubscriptionRequestNotification(
-            $teacher->name,
-            $subject->name
-        ));
-
-    
     if (
         $teacher->subjectRequests()
             ->where('subject_id', $subject->id)
@@ -238,7 +231,14 @@ public function requestToJoinSubject(Request $request)
         'status' => 'pending',
         
     ]);
+    $admins = User::where('role_id', 3)->get();
 
+     foreach ($admins as $admin) {
+       $admin->notify(new TeacherSubscriptionRequestNotification(
+           $teacher->name, 
+           $subject->title
+        ));
+    }
 
     return response()->json([
         'message' => 'Subscription request has been sent successfully',
@@ -418,6 +418,21 @@ public function createChallenge(Request $request)
    
     if (!empty($validated['question_ids'])) {
         $challenge->questions()->attach($validated['question_ids']);
+    }
+    // الحصول على جميع الطلاب المشتركين في المادة عند هذا المعلم
+    $students = User::whereHas('subjects', function ($query) use ($validated, $teacherId) {
+        $query->where('subject_id', $validated['subject_id'])
+              ->where('teacher_id', $teacherId)
+              ->where('status', 'accepted');
+    })->get();
+
+    // إرسال إشعار لكل طالب
+    foreach ($students as $student) {
+        $student->notify(new NewChallengeNotification(
+            auth()->user()->name,   // اسم المعلم
+            $challenge->title,      // عنوان التحدي
+            $challenge->start_time  // وقت البدء
+        ));
     }
 
     return response()->json([
