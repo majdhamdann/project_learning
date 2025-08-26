@@ -383,18 +383,8 @@ Route::get('/get/ratings',[AdminController::class,'getTeachersRatings']);
 
 
        });
-  //  Route::middleware('auth:sanctum')->get('/notifications', function() {
-  //   $user = auth()->user();
-  //   return response()->json([
-  //       'notifications' => $user->notifications,
-  //       'unread' => $user->unreadNotifications,
-  //   ]);
 
 
-
-    
-
-/// routes/api.php
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread', [NotificationController::class, 'unread']);

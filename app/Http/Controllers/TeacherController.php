@@ -420,15 +420,18 @@ public function createChallenge(Request $request)
         $challenge->questions()->attach($validated['question_ids']);
     }
 
-  $students = Student::whereHas('subjects', function ($query) use ($teacherId) {
-    $query->where('subject_student.teacher_id', $teacherId)
-          ->where('subject_student.status', 'accepted');
-})->get();
 
 
+  $studentUserIds = DB::table('subject_student')
+            ->where('subject_student.teacher_id', $teacherId)
+            ->where('status', 'accepted')
+            ->pluck('user_id'); 
 
+        $studentUsers = User::whereIn('id', $studentUserIds)
+           ->where('id', '!=', $teacherId)
+            ->get();
 
-    foreach ($students as $student) {
+    foreach ($studentUsers as $student) {
     $student->notify(new NewChallengeNotification(
         auth()->user()->name,  
         $challenge->title,     
