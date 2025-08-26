@@ -347,7 +347,7 @@ public function addComment(Request $request)
 
     $user = auth()->user();
     if (!$user) {
-        return response()->json(['message' => 'Unauthorized. Please log in first.'], 401);
+        return response()->json(['message' => 'Unauthorized'], 401);
     }
 
     $comment = Comment::create([
@@ -358,30 +358,30 @@ public function addComment(Request $request)
     ]);
 
     $lesson = Lesson::with('subject')->findOrFail($validated['lesson_id']);
-    $subject = $lesson->subject;
-
-    if ($subject) {
+    
+    if ($lesson->subject) {
+        $subject = $lesson->subject;
+        
         $teacher = Teacher::find($subject->teacher_id);
-
-        if ($teacher && $teacher->id !== $user->id) {
-            $teacher->notify(new CommentNotification(
+        if ($teacher && $teacher->user_id !== $user->id) {
+            User::find($teacher->user_id)?->notify(new CommentNotification(
                 $user->name,
                 $lesson->title,
                 $comment->content
             ));
         }
-$students = Student::whereHas('subjects', function ($query) use ($subject) {
-    $query->where('subject_id', $subject->id)
-          ->where('teacher_id', $subject->teacher_id)
-          ->where('status', 'accepted');
-})->where('id', '!=', auth()->id())->get();
 
+        $studentUserIds = DB::table('subject_student')
+            ->where('subject_id', $subject->id)
+            ->where('status', 'accepted')
+            ->pluck('user_id'); 
 
+        $studentUsers = User::whereIn('id', $studentUserIds)
+            ->where('id', '!=', $user->id)
+            ->get();
 
-
-
-    foreach ($students as $student) {          
-          $student->notify(new CommentNotification(
+        foreach ($studentUsers as $studentUser) {
+            $studentUser->notify(new CommentNotification(
                 $user->name,
                 $lesson->title,
                 $comment->content
@@ -390,7 +390,7 @@ $students = Student::whereHas('subjects', function ($query) use ($subject) {
     }
 
     return response()->json([
-        'message' => 'Comment added successfully and notifications sent',
+        'message' => 'Comment added successfully',
         'comment' => $comment
     ], 201);
 }
