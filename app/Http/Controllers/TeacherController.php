@@ -419,21 +419,23 @@ public function createChallenge(Request $request)
     if (!empty($validated['question_ids'])) {
         $challenge->questions()->attach($validated['question_ids']);
     }
-    // الحصول على جميع الطلاب المشتركين في المادة عند هذا المعلم
-    $students = User::whereHas('subjects', function ($query) use ($validated, $teacherId) {
-        $query->where('subject_id', $validated['subject_id'])
-              ->where('teacher_id', $teacherId)
-              ->where('status', 'accepted');
-    })->get();
 
-    // إرسال إشعار لكل طالب
+  $students = Student::whereHas('subjects', function ($query) use ($teacherId) {
+    $query->where('subject_student.teacher_id', $teacherId)
+          ->where('subject_student.status', 'accepted');
+})->get();
+
+
+
+
     foreach ($students as $student) {
-        $student->notify(new NewChallengeNotification(
-            auth()->user()->name,   // اسم المعلم
-            $challenge->title,      // عنوان التحدي
-            $challenge->start_time  // وقت البدء
-        ));
-    }
+    $student->notify(new NewChallengeNotification(
+        auth()->user()->name,  
+        $challenge->title,     
+        $challenge->start_time  
+    ));
+}
+
 
     return response()->json([
         'message'   => 'Challenge created successfully.',
