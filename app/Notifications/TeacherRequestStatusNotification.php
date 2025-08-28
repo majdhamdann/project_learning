@@ -28,7 +28,7 @@ class TeacherRequestStatusNotification extends Notification
         return [
             'subject_name' => $this->subjectName,
             'status' => $this->status,
-            'message' => "تم {$this->status} طلبك للانضمام لمادة {$this->subjectName}",
+            'message' => "Your request to join subject {$this->subjectName} has been {$this->status}"
         ];
     }
 }

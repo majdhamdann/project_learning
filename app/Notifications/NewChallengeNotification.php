@@ -33,7 +33,8 @@ class NewChallengeNotification extends Notification
             'teacher_name'   => $this->teacherName,
             'challenge_title'=> $this->challengeTitle,
             'start_time'     => $this->startTime,
-            'message'        => "المعلم {$this->teacherName} أنشأ تحديًا جديدًا بعنوان '{$this->challengeTitle}' يبدأ في {$this->startTime}",
+            'message' => "Teacher {$this->teacherName} created a new challenge titled '{$this->challengeTitle}' starting at {$this->startTime}"
+
         ];
     }
 }
