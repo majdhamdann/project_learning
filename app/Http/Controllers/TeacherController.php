@@ -29,9 +29,12 @@ class TeacherController extends Controller
     public function getTeachers()
 {
     
-    $teachers = User::where('role_id', 2)->get();
+    $teachers = User::where('role_id', '2') 
+    ->withCount('ratings') 
+    ->withAvg('ratings', 'rating') 
+    ->get();
 
-    return response()->json($teachers);
+return response()->json($teachers);
 }
 
 

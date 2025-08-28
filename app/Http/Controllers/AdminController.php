@@ -308,29 +308,42 @@ public function getTeacherSubjects($teacherId)
 
  //عرض كامل معلومات الاستاذ
 
-
  public function getTeacherDetails($teacherId)
  {
      $teacher = User::findOrFail($teacherId);
  
-     
+   
      $teacherProfile = DB::table('teacher_profiles')
          ->where('teacher_id', $teacherId)
          ->first();
  
-    
-     $subjects = DB::table('subjects')
+     
+     $acceptedSubjects = DB::table('subjects')
          ->join('teacher_subject', 'subjects.id', '=', 'teacher_subject.subject_id')
          ->where('teacher_subject.teacher_id', $teacherId)
-         ->select('subjects.*')
+         ->where('teacher_subject.status', 'accepted')
+         ->select('subjects.*', 'teacher_subject.status')
+         ->get();
+ 
+     
+     $pendingSubjects = DB::table('subjects')
+         ->join('teacher_subject', 'subjects.id', '=', 'teacher_subject.subject_id')
+         ->where('teacher_subject.teacher_id', $teacherId)
+         ->where('teacher_subject.status', 'pending')
+         ->select('subjects.*', 'teacher_subject.status')
          ->get();
  
      return response()->json([
          'teacher' => $teacher,
          'profile' => $teacherProfile,
-         'subjects' => $subjects
+         'subjects' => [
+             'accepted' => $acceptedSubjects,
+             'pending' => $pendingSubjects,
+         ]
      ]);
  }
+ 
+
  
 // عرض تقييمات الاساتذة 
 
