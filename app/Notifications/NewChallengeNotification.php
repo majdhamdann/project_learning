@@ -3,42 +3,37 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\Fcm\FcmChannel;
-use NotificationChannels\Fcm\FcmMessage;
-//إشعار لجميع الطلاب عند إنشاء تحدي من قبل معلم
+
 class NewChallengeNotification extends Notification
 {
     use Queueable;
 
     private $teacherName;
-    private $subjectName;
     private $challengeTitle;
+    private $startTime;
 
-    public function __construct($teacherName, $subjectName, $challengeTitle)
+    public function __construct($teacherName, $challengeTitle, $startTime)
     {
-        $this->teacherName = $teacherName;
-        $this->subjectName = $subjectName;
+        $this->teacherName   = $teacherName;
         $this->challengeTitle = $challengeTitle;
+        $this->startTime      = $startTime;
     }
 
     public function via($notifiable)
     {
-        return [FcmChannel::class];
+        return ['database'];
     }
 
-    public function toFcm($notifiable)
+    public function toDatabase($notifiable)
     {
-        return FcmMessage::create()
-            ->setNotification(
-                \NotificationChannels\Fcm\Resources\Notification::create()
-                    ->setTitle('تحدي جديد')
-                    ->setBody("المعلم {$this->teacherName} أنشأ تحدي '{$this->challengeTitle}' في مادة {$this->subjectName}")
-            )
-            ->setData([
-                'type' => 'new_challenge',
-                'subject' => $this->subjectName,
-                'challenge' => $this->challengeTitle
-            ]);
+        return [
+            'teacher_name'   => $this->teacherName,
+            'challenge_title'=> $this->challengeTitle,
+            'start_time'     => $this->startTime,
+            'message'        => "المعلم {$this->teacherName} أنشأ تحديًا جديدًا بعنوان '{$this->challengeTitle}' يبدأ في {$this->startTime}",
+        ];
     }
 }

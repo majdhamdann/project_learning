@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\TeacherRequestStatusNotification;
 
 use App\Notifications\SubscriptionRequestStatusNotification;
 
@@ -72,10 +73,10 @@ public function handleSubjectRequest(Request $request, $id)
 
     $subjectStudent->save();
     $student = $subjectStudent->user;
-    $student->notify(new SubscriptionRequestStatusNotification(
-        $subjectStudent->status,
-        $subjectStudent->subject->name
-    ));
+    // $student->notify(new SubscriptionRequestStatusNotification(
+    //     $subjectStudent->status,
+    //     $subjectStudent->subject->name
+    // ));
 
     return response()->json(['message' => 'Request status updated successfully.']);
 }
@@ -232,6 +233,11 @@ public function handleTeacherSubjectRequest(Request $request,$id)
 
     $requestRow->status = $statusMap[$validated['status']];
     $requestRow->save();
+    $teacher = $requestRow->teacher;
+    $teacher->notify(new TeacherRequestStatusNotification(
+        $requestRow->subject->title,
+        $requestRow->status
+    ));
 
     return response()->json([
         'message' => 'تم تحديث حالة طلب الاشتراك بنجاح.',

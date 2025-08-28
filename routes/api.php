@@ -13,7 +13,8 @@ use App\Http\Controllers\AdminController;
 use App\Models\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\NotificationController;
+ 
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -153,6 +154,7 @@ Route::delete('/delete/test/from/favorite/teacher/{test_id}',[TeacherController:
  
 //طلب الانضمام لمادة 
 //اشعار للادمن
+//request_teacher_join_subject
 Route::post('/request/teacher/join/subject',[TeacherController::class,'requestToJoinSubject']);
 
 //عرض حالة الطلب للانضمام لمادة 
@@ -347,6 +349,7 @@ Route::middleware(['auth:sanctum','admin'])->group(function (){
  Route::get('/get/register/requests',[AdminController::class,'registerRequests']);
 
 //قبول ورفض حالات انشاء حساب 
+//////////////////////////////////////////////
 Route::post('response/register/{request_id}',[AdminController::class,'updateRequestStatus']);
 
 //اضافة استاذ
@@ -358,6 +361,8 @@ Route::get('/get/users',[AdminController::class,'getUsers']);
 //عرض طلبات الاساتذة للانضمام لمادة 
 Route::get('/get/request/join/subject',[AdminController::class,'getPendingTeacherSubjectRequests']);
 
+
+///////////////////////////////
 //قبول ورفض طلبات الاساتذة 
 Route::post('/response/teacher/join/subject/{request_id}',[AdminController::class,'handleTeacherSubjectRequest']);
 
@@ -378,3 +383,13 @@ Route::get('/get/ratings',[AdminController::class,'getTeachersRatings']);
 
 
        });
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread', [NotificationController::class, 'unread']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+});

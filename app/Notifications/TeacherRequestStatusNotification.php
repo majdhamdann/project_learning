@@ -5,17 +5,17 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class TeacherSubscriptionRequestNotification extends Notification
+class TeacherRequestStatusNotification extends Notification
 {
     use Queueable;
 
-    private $teacherName;
     private $subjectName;
+    private $status;
 
-    public function __construct($teacherName, $subjectName)
+    public function __construct($subjectName, $status)
     {
-        $this->teacherName = $teacherName;
         $this->subjectName = $subjectName;
+        $this->status = $status;
     }
 
     public function via($notifiable)
@@ -26,9 +26,9 @@ class TeacherSubscriptionRequestNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'teacher_name' => $this->teacherName,
             'subject_name' => $this->subjectName,
-            'message' => "المعلم {$this->teacherName} طلب الانضمام لمادة {$this->subjectName}"
+            'status' => $this->status,
+            'message' => "تم {$this->status} طلبك للانضمام لمادة {$this->subjectName}",
         ];
     }
 }

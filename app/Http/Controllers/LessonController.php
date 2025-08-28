@@ -9,7 +9,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Comment;
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\TeacherSubject;
+use App\Notifications\CommentNotification  ;
 
 class LessonController extends Controller
 {
@@ -312,22 +315,79 @@ public function uploadLessonSummary(Request $request, $lessonId)
 // اضافة تعليق على فيديو 
 
 
+// public function addComment1(Request $request)
+// {
+//     $validated = $request->validate([
+//         'lesson_id' => 'required|exists:lessons,id',
+//         'content' => 'required|string',
+//         'parent_id' => 'nullable|exists:comments,id', 
+//     ]);
+
+//     $userId = auth()->id();
+
+//     $comment = Comment::create([
+//         'lesson_id' => $validated['lesson_id'],
+//         'user_id' => $userId,
+//         'content' => $validated['content'],
+//         'parent_id' => $validated['parent_id'] ?? null,
+//     ]);
+
+//     return response()->json([
+//         'message' => 'Comment added successfully',
+//         'comment' => $comment
+//     ], 201);
+// }
 public function addComment(Request $request)
 {
     $validated = $request->validate([
         'lesson_id' => 'required|exists:lessons,id',
-        'content' => 'required|string',
-        'parent_id' => 'nullable|exists:comments,id', 
+        'content'   => 'required|string',
+        'parent_id' => 'nullable|exists:comments,id',
     ]);
 
-    $userId = auth()->id();
+    $user = auth()->user();
+    if (!$user) {
+        return response()->json(['message' => 'Unauthorized'], 401);
+    }
 
     $comment = Comment::create([
         'lesson_id' => $validated['lesson_id'],
-        'user_id' => $userId,
-        'content' => $validated['content'],
+        'user_id'   => $user->id,
+        'content'   => $validated['content'],
         'parent_id' => $validated['parent_id'] ?? null,
     ]);
+
+    $lesson = Lesson::with('subject')->findOrFail($validated['lesson_id']);
+    
+    if ($lesson->subject) {
+        $subject = $lesson->subject;
+        
+        $teacher = Teacher::find($subject->teacher_id);
+        if ($teacher && $teacher->user_id !== $user->id) {
+            User::find($teacher->user_id)?->notify(new CommentNotification(
+                $user->name,
+                $lesson->title,
+                $comment->content
+            ));
+        }
+
+        $studentUserIds = DB::table('subject_student')
+            ->where('subject_id', $subject->id)
+            ->where('status', 'accepted')
+            ->pluck('user_id'); 
+
+        $studentUsers = User::whereIn('id', $studentUserIds)
+            ->where('id', '!=', $user->id)
+            ->get();
+
+        foreach ($studentUsers as $studentUser) {
+            $studentUser->notify(new CommentNotification(
+                $user->name,
+                $lesson->title,
+                $comment->content
+            ));
+        }
+    }
 
     return response()->json([
         'message' => 'Comment added successfully',
