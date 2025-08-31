@@ -28,7 +28,7 @@ class TeacherAcceptedStudentRequestNotification extends Notification
         return [
             'teacher_name' => $this->teacherName,
             'subject_name' => $this->subjectName,
-            'message' => "المعلم {$this->teacherName} وافق على طلبك للاشتراك في مادة {$this->subjectName}",
+            'message' => "Teacher {$this->teacherName} approved your enrollment request for subject {$this->subjectName}"
         ];
     }
 }

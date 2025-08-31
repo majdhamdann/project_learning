@@ -28,7 +28,7 @@ class TeacherSubscriptionRequestNotification extends Notification
         return [
             'teacher_name' => $this->teacherName,
             'subject_name' => $this->subjectName,
-            'message' => "المعلم {$this->teacherName} طلب الانضمام لمادة {$this->subjectName}"
+            'message' => "Teacher {$this->teacherName} requested to join subject {$this->subjectName}"
         ];
     }
 }

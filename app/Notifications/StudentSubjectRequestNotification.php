@@ -28,7 +28,7 @@ class StudentSubjectRequestNotification extends Notification
         return [
             'student_name' => $this->studentName,
             'subject_name' => $this->subjectName,
-            'message' => "الطالب {$this->studentName} طلب الاشتراك في مادة {$this->subjectName}",
+           'message' => "Student {$this->studentName} requested to enroll in subject {$this->subjectName}"
         ];
     }
 }

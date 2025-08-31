@@ -33,7 +33,8 @@ class CommentNotification extends Notification
             'user_name'    => $this->userName,
             'lesson_title' => $this->lessonTitle,
             'comment'      => $this->commentContent,
-            'message'      => "{$this->userName} أضاف تعليقًا على درس '{$this->lessonTitle}': {$this->commentContent}"
+            'message' => "{$this->userName} added a comment on lesson '{$this->lessonTitle}': {$this->commentContent}"
+
         ];
     }
 }
