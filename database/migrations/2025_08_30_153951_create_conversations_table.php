@@ -13,12 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('device_tokens', function (Blueprint $table) {
-             $table->id();
-             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-             $table->string('token')->unique();
-             $table->string('platform')->nullable(); 
-             $table->timestamps();
+        Schema::create('conversations', function (Blueprint $table) {
+            $table->id();
+
+   $table->foreignId('student_id')->references('id')->on('users')->onDelete('cascade');
+    $table->foreignId('teacher_id')->references('id')->on('users')->onDelete('cascade');
+            $table->timestamps();
+
+
+
         });
     }
 
@@ -29,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('conversations');
     }
 };

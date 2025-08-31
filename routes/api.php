@@ -10,6 +10,8 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ConversationController;
+
 use App\Models\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -203,7 +205,8 @@ Route::get('/get/subjects/student',[StudentController::class,'getAcceptedSubject
 
 
 
-
+//سلم الاختبار 
+Route::get('/get/solution/test/{test_id}',[TestController::class,'getTestQuestionsWithCorrectOptions']);
 
 // امكانية التصفح
 Route::get('/lessons/viewallQuestion/{subjectId}', [LessonController::class, 'viewAllQuestion'])->middleware('auth:sanctum');
@@ -324,6 +327,19 @@ Route::get('/get/challenges/student',[StudentController::class,'getChallengesFor
 
 //الاجابة على التحدي 
 Route::post('/submit/challenge/{challenge_id}',[StudentController::class,'submitChallengeAnswers']);
+
+//انشاء محادثة 
+Route::post('/create/conversation',[ConversationController::class,'createConversation']);
+
+//ارسال رسالة 
+Route::post('/send/message/{conversation_id}',[ConversationController::class,'sendMessage']);
+
+//عرض الرسائل
+Route::get('/get/my/massage/{conversation_id}',[ConversationController::class,'getConversationMessages']);
+
+//عرض المحادثات 
+Route::post('/get/my/coversation',[ConversationController::class,'myConversations']);
+
 
 
 }); 

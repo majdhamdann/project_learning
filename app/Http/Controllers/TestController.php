@@ -890,4 +890,27 @@ public function getAllTests() {
 }
 
 
+//عرض سلم الاختبار 
+
+public function getTestQuestionsWithCorrectOptions($testId)
+{
+    $test = Test::with(['questions.options' => function ($query) {
+        $query->where('is_correct', 1)->select('id', 'question_id', 'option_text');
+    }])->find($testId);
+
+    if (!$test) {
+        return response()->json(['message' => 'Test not found'], 404);
+    }
+
+    $result = $test->questions->map(function ($question) {
+        return [
+            'question_text' => $question->question_text,
+            'correct_option' => $question->options->first()->option_text ?? null,
+        ];
+    });
+
+    return response()->json($result);
+}
+
+
 }
