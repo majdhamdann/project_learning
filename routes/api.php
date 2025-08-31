@@ -338,7 +338,7 @@ Route::post('/send/message/{conversation_id}',[ConversationController::class,'se
 Route::get('/get/my/massage/{conversation_id}',[ConversationController::class,'getConversationMessages']);
 
 //عرض المحادثات 
-Route::post('/get/my/coversation',[ConversationController::class,'myConversations']);
+Route::get('/get/my/coversation',[ConversationController::class,'myConversations']);
 
 
 

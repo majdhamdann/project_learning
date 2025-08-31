@@ -56,25 +56,25 @@ public function createConversation(Request $request)
     ]);
 }
 
-//عرض المحادثات 
+
 public function myConversations(Request $request)
 {
     $user = auth()->user();
 
-    // جلب المحادثات اللي المستخدم طرف فيها
+    
     $conversations = Conversation::where('student_id', $user->id)
         ->orWhere('teacher_id', $user->id)
         ->with(['student', 'teacher'])
         ->get();
 
-    // تجهيز الاستجابة
+   
     $result = $conversations->map(function ($conversation) use ($user) {
-        // تحديد الطرف الآخر
+       
         $otherUser = $conversation->student_id == $user->id
             ? $conversation->teacher
             : $conversation->student;
 
-        // حساب عدد الرسائل غير المقروءة
+       
         $unreadCount = Message::where('conversation_id', $conversation->id)
             ->where('sender_id', '!=', $user->id)
             ->where('is_read', false)
@@ -98,20 +98,20 @@ public function sendMessage(Request $request, $conversationId)
 {
     $user = auth()->user();
 
-    // التحقق من وجود المحادثة
+  
     $conversation = Conversation::findOrFail($conversationId);
 
-    // التحقق أن المستخدم هو جزء من المحادثة
+  
     if ($conversation->student_id !== $user->id && $conversation->teacher_id !== $user->id) {
         return response()->json(['message' => 'You are not a participant in this conversation.'], 403);
     }
 
-    // التحقق من المدخلات
+   
     $request->validate([
         'message' => 'required|string',
     ]);
 
-    // إنشاء الرسالة
+  
     $message = Message::create([
         'conversation_id' => $conversation->id,
         'sender_id'       => $user->id,
