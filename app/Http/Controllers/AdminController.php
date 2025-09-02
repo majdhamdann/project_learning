@@ -358,4 +358,25 @@ public function getTeachersRatings()
     return response()->json($teachers);
 }
 
+//عرض عدد الدروس 
+
+public function getLessonsCount()
+{
+    $count = Lesson::count();
+
+    return response()->json([
+        'lessons_count' => $count
+    ]);
+}
+
+
+//عرض المواد مع عدد الدروس 
+
+public function getSubjectsWithLessonsCount()
+{
+    $subjects = Subject::withCount('lessons')->get();
+
+    return response()->json($subjects);
+}
+
 }

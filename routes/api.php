@@ -397,7 +397,11 @@ Route::get('/get/all/profile/teacher/{teacher_id}',[AdminController::class,'getT
 //عرض تقييمات الاساتذة 
 Route::get('/get/ratings',[AdminController::class,'getTeachersRatings']);
 
+//عرض عدد الدروس 
+Route::get('/get/lessons/count',[AdminController::class,'getLessonsCount']);
 
+//عرض المواد مع عدد الدروس 
+Route::get('/get/subjects/with/count/lessons',[AdminController::class,'getSubjectsWithLessonsCount']);
        });
 
 
