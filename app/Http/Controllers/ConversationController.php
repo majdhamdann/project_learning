@@ -131,7 +131,6 @@ public function getConversationMessages($conversationId)
 {
     $user = auth()->user();
 
-   
     $conversation = Conversation::where('id', $conversationId)
         ->where(function ($query) use ($user) {
             $query->where('student_id', $user->id)
@@ -143,29 +142,27 @@ public function getConversationMessages($conversationId)
         return response()->json(['message' => 'Conversation not found or unauthorized'], 404);
     }
 
-    
+    // رجع كل الرسائل (سواء مقروءة أو لأ)
     $messages = Message::where('conversation_id', $conversationId)
-    ->where('is_read', true)
         ->orderBy('created_at', 'asc')
         ->get();
 
-    
+    // رجع الرسائل الغير مقروءة فقط للطرف الحالي
     $unreadMessages = Message::where('conversation_id', $conversationId)
         ->where('sender_id', '!=', $user->id)
         ->where('is_read', false)
         ->get();
 
-   
+    // حدث الرسائل الغير مقروءة وخليها مقروءة
     Message::where('conversation_id', $conversationId)
         ->where('sender_id', '!=', $user->id)
         ->where('is_read', false)
         ->update(['is_read' => true]);
 
     return response()->json([
-        
-        'user_id'  => $user->id,
-        'messages'          => $messages,
-        'unread_messages'   => $unreadMessages
+        'user_id'        => $user->id,
+        'messages'       => $messages,
+        'unread_messages'=> $unreadMessages
     ]);
 }
 
