@@ -339,7 +339,7 @@ public function createTestWithQuestions(Request $request)
         foreach (array_keys($submittedAnswers) as $submittedQuestionId) {
             if (!in_array($submittedQuestionId, $allQuestionIds)) {
                 return response()->json([
-                    'message' => "السؤال رقم $submittedQuestionId غير موجود في هذا الاختبار."
+                    'message' => "Question number $submittedQuestionId does not exist in this exam."
                 ], 400);
             }
         }

@@ -26,7 +26,7 @@ class SubjectController extends Controller
         ]);
     
         return response()->json([
-            'message' => 'تم إنشاء المادة بنجاح ',
+            'message' => 'The course has been created successfully.',
             'subject' => $subject,
         ], 201);
     }
@@ -56,7 +56,7 @@ class SubjectController extends Controller
     
             if ($teacher->role_id != 2) {
                 return response()->json([
-                    'message' => 'المستخدم المحدد ليس أستاذًا.',
+                    'message' => 'The specified user is not a teacher',
                 ], 403);
             }
     
@@ -67,7 +67,7 @@ class SubjectController extends Controller
         $subject->update($updateData);
     
         return response()->json([
-            'message' => 'تم تحديث المادة بنجاح.',
+            'message' => 'The course has been updated successfully',
             'subject' => $subject->fresh(),
         ]);
     }
@@ -127,7 +127,7 @@ public function addStudentsToSubject(Request $request, $subjectId)
         ));
     }
     return response()->json([
-        'message' => 'تم إضافة الطلاب إلى المادة بنجاح'
+        'message' => 'The students have been added to the course successfully.'
     ]);
 }
 public function removeStudentFromSubject(Request $request, $subjectId)
@@ -142,7 +142,7 @@ public function removeStudentFromSubject(Request $request, $subjectId)
     
     if (!$isStudent) {
         return response()->json([
-            'message' => 'المستخدم المحدد ليس طالباً.',
+            'message' => 'The specified user is not a student',
         ], 404);
     }
 
@@ -150,14 +150,14 @@ public function removeStudentFromSubject(Request $request, $subjectId)
     
     if (!$isEnrolled) {
         return response()->json([
-            'message' => 'هذا الطالب غير مسجل في هذه المادة.',
+            'message' => 'This student is not enrolled in this course.',
         ], 404);
     }
 
     $subject->students()->detach($validated['student_id']);
 
     return response()->json([
-        'message' => 'تم إزالة الطالب من المادة بنجاح.',
+        'message' => 'The student has been removed from the course successfully.',
     ]);
 }
 

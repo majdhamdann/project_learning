@@ -240,7 +240,7 @@ public function handleTeacherSubjectRequest(Request $request,$id)
     ));
 
     return response()->json([
-        'message' => 'تم تحديث حالة طلب الاشتراك بنجاح.',
+        'message' => 'The subscription request status has been updated successfully.',
         'request' => $requestRow->load(['teacher', 'subject']),
     ]);
 }

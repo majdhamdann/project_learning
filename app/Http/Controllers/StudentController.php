@@ -54,7 +54,7 @@ public function subscribe(Request $request)
    
     if ($student->subjects()->where('subject_id', $subject_id)->exists()) {
         return response()->json([
-            'message' => 'تم تقديم طلب مسبق لهذه المادة.',
+            'message' => 'A prior request has already been submitted for this course.',
         ], 409); 
     }
 

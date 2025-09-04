@@ -59,14 +59,14 @@ class AuthController extends Controller
     
         if (!$user) {
             return response()->json([
-                'message' => 'رقم الهاتف غير مسجل.',
+                'message' => 'The phone number is not registered.',
             ], 404);
         }
     
        
         if (!Hash::check($credentials['password'], $user->password)) {
             return response()->json([
-                'message' => 'كلمة المرور غير صحيحة.',
+                'message' => 'The password is incorrect.',
             ], 401);
         }
     
@@ -74,7 +74,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
     
         return response()->json([
-            'message' => 'تم تسجيل الدخول بنجاح.',
+            'message' => 'Login successful.',
             'user' => $user,
             'token' => $token,
         ]);

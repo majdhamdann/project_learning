@@ -25,7 +25,7 @@ class LessonController extends Controller
           'page_number' => 'nullable|integer', 
         ]);
        if (!$validated['lesson_id']) {
-            return response()->json(['message' => 'حقل lesson_id مطلوب.'], 400);
+            return response()->json(['message' => 'The lesson_id field is required.'], 400);
         }
        $lesson = Lesson::findOrFail($validated['lesson_id']);
 

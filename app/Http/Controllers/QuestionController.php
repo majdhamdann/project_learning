@@ -60,7 +60,7 @@ public function addQuestionWithOptions(Request $request)
     }
     
     return response()->json([
-        'message' => 'تم إضافة السؤال مع الخيارات بنجاح',
+        'message' => 'The question with its options has been added successfully',
         'question' => $question->load('options'), 
     ], 201);
 }
@@ -73,7 +73,7 @@ public function deleteQuestion($id){
         if(Question::where('id',$id)->exists()){
             Question::where('id',$id)->with('options')->delete();
             return response()->json([
-                'message' => 'تم حذف السؤال مع الخيارات بنجاح',
+                'message' => 'The question along with its options has been deleted successfully',
                 
             ], 201);
 
@@ -101,7 +101,7 @@ public function updateQuestion(Request $request, $questionId)
     ]);
 
     return response()->json([
-        'message' => 'تم تعديل السؤال بنجاح',
+        'message' => 'The question has been updated successfully.',
         'question' => $question,
     ], 200);
 }
@@ -139,7 +139,7 @@ public function updateOption(Request $request, $questionId, $optionId)
     $option->save();
 
     return response()->json([
-        'message' => 'تم تعديل الخيار بنجاح',
+        'message' => 'The option has been updated successfully.',
         'option' => $option,
     ], 200);
 }
