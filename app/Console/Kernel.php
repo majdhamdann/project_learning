@@ -20,6 +20,9 @@ class Kernel extends ConsoleKernel
     // ثم حذف التحديات المنتهية
     $schedule->command('challenges:delete-expired')->everyMinute();
         // $schedule->command('inspire')->hourly();
+
+        $schedule->command('subjects:delete-old-accepted')->daily();
+
     }
 
     /**

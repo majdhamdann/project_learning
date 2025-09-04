@@ -197,7 +197,7 @@ else{
         }
     
        
-        if ($user->role_id != 2) {
+        if ($user->role_id ==1) {
             
             $isAccepted = DB::table('subject_student')
                 ->where('user_id', $userId)
