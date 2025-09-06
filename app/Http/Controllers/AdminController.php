@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\TeacherRequestStatusNotification;
 
-use App\Notifications\SubscriptionRequestStatusNotification;
+use App\Notifications\TeacherAcceptedStudentRequestNotification;
 
 
 
@@ -72,10 +72,11 @@ public function handleSubjectRequest(Request $request, $id)
     }
 
     $subjectStudent->save();
+    $subjectStudent->load('subject');
     $student = $subjectStudent->user;
-     $student->notify(new SubscriptionRequestStatusNotification(
+     $student->notify(new TeacherAcceptedStudentRequestNotification(
          $subjectStudent->status,
-         $subjectStudent->subject->name
+         $subjectStudent->subject->title
      ));
 
     return response()->json(['message' => 'Request status updated successfully.']);
