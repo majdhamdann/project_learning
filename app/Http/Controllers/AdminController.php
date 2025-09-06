@@ -73,10 +73,10 @@ public function handleSubjectRequest(Request $request, $id)
 
     $subjectStudent->save();
     $student = $subjectStudent->user;
-    // $student->notify(new SubscriptionRequestStatusNotification(
-    //     $subjectStudent->status,
-    //     $subjectStudent->subject->name
-    // ));
+     $student->notify(new SubscriptionRequestStatusNotification(
+         $subjectStudent->status,
+         $subjectStudent->subject->name
+     ));
 
     return response()->json(['message' => 'Request status updated successfully.']);
 }
