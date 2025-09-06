@@ -535,6 +535,28 @@ public function getStudentPoints()
     ]);
 }
 
+
+//عرض كل اسئلة الاستاذ 
+
+
+public function getTeacherQuestions()
+{
+    $teacherId = auth()->id();
+
+    $questions = Question::select('questions.*')
+        ->join('lessons', 'questions.lesson_id', '=', 'lessons.id')
+        ->where('lessons.teacher_id', $teacherId)
+        ->with('options')
+        ->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $questions
+    ]);
+}
+
+
+
 }
 
 

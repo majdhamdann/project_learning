@@ -177,6 +177,8 @@ Route::get('/get/challenges/teacher',[TeacherController::class,'getChallengesFor
 //عرض نقاط الطلاب عند الاستاذ
 Route::get('/get/points/students/teacher',[TeacherController::class,'getStudentPoints']);
 
+Route::get('/get/questions/teacher',[TeacherController::class,'getTeacherQuestions']);
+
  });
 
 
